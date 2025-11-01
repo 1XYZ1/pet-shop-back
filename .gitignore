@@ -43,13 +43,6 @@ lerna-debug.log*
 .claude/
 CLAUDE.md
 
-# Yarn Berry
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
 # Documentation files
 BACKEND_CART_MINIMAL.md
 BACKEND_FILTERS_PLAN.md
