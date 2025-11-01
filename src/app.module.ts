@@ -9,7 +9,23 @@ import { FilesModule } from './files/files.module';
 import { AuthModule } from './auth/auth.module';
 import { MessagesWsModule } from './messages-ws/messages-ws.module';
 import { CartModule } from './cart/cart.module';
+import { ServicesModule } from './services/services.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
+/**
+ * Módulo raíz de la aplicación Pet Shop API
+ *
+ * Módulos principales:
+ * - ProductsModule: Gestión de productos para mascotas (gatos y perros)
+ * - ServicesModule: Gestión de servicios de peluquería y veterinaria
+ * - AppointmentsModule: Sistema de agendamiento de citas para servicios
+ * - AuthModule: Autenticación y autorización de usuarios
+ * - CartModule: Carrito de compras
+ * - FilesModule: Manejo de archivos e imágenes
+ * - MessagesWsModule: WebSocket para mensajería en tiempo real
+ * - SeedModule: Población de base de datos con datos de ejemplo
+ * - CommonModule: Utilidades y recursos compartidos
+ */
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -44,6 +60,10 @@ import { CartModule } from './cart/cart.module';
     MessagesWsModule,
 
     CartModule,
+
+    ServicesModule,
+
+    AppointmentsModule,
 
   ],
 })

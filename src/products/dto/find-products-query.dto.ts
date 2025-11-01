@@ -6,9 +6,10 @@ import {
   Min,
   Max,
   IsString,
-  IsIn,
+  IsEnum,
   IsNumber,
 } from 'class-validator';
+import { ProductCategory } from '../../common/enums';
 
 /**
  * DTO para filtrar y paginar productos en el endpoint GET /api/products
@@ -66,21 +67,21 @@ export class FindProductsQueryDto {
   q?: string;
 
   /**
-   * Filtro por género del producto
-   * Permite: men, women, kid, unisex
-   * Nota: cuando se filtra por género específico, también incluye productos unisex
+   * Filtro por categoría del producto
+   * Permite: cats, dogs
+   * Filtra productos específicos para gatos o perros
    */
   @ApiProperty({
-    description: 'Filtrar productos por género',
-    enum: ['men', 'women', 'kid', 'unisex'],
-    example: 'men',
+    description: 'Filtrar productos por categoría',
+    enum: ProductCategory,
+    example: ProductCategory.DOGS,
     required: false,
   })
   @IsOptional()
-  @IsIn(['men', 'women', 'kid', 'unisex'], {
-    message: 'El género debe ser: men, women, kid o unisex',
+  @IsEnum(ProductCategory, {
+    message: 'La categoría debe ser: cats o dogs',
   })
-  gender?: string;
+  category?: ProductCategory;
 
   /**
    * Filtro por tallas disponibles

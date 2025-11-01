@@ -12,18 +12,19 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { ProductImage } from './';
 import { User } from '../../auth/entities/user.entity';
+import { ProductCategory } from '../../common/enums';
 
 /**
  * Entidad Product con índices optimizados para consultas frecuentes
  * Índices agregados:
- * - gender: Para filtros por género
+ * - category: Para filtros por categoría (gatos/perros)
  * - price: Para filtros y ordenamiento por precio
- * - [gender, price]: Índice compuesto para consultas que filtran por ambos
+ * - [category, price]: Índice compuesto para consultas que filtran por ambos
  */
 @Entity({ name: 'products' })
-@Index(['gender']) // Índice simple para búsquedas por género
+@Index(['category']) // Índice simple para búsquedas por categoría
 @Index(['price']) // Índice simple para filtros y ordenamiento por precio
-@Index(['gender', 'price']) // Índice compuesto para consultas combinadas
+@Index(['category', 'price']) // Índice compuesto para consultas combinadas
 export class Product {
   @ApiProperty({
     example: 'cd533345-f1f3-48c9-a62e-7dc2da50c8f8',
@@ -93,11 +94,16 @@ export class Product {
   sizes: string[];
 
   @ApiProperty({
-    example: 'women',
-    description: 'Product gender',
+    description: 'Product category (cats or dogs)',
+    enum: ProductCategory,
+    example: ProductCategory.DOGS,
   })
-  @Column('text')
-  gender: string;
+  @Column({
+    type: 'enum',
+    enum: ProductCategory,
+    nullable: true, // Temporal: permitir null para migración de datos
+  })
+  category: ProductCategory;
 
   @ApiProperty()
   @Column('text', {

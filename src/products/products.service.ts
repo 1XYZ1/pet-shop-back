@@ -70,12 +70,12 @@ export class ProductsService {
 
   /**
    * Obtiene una lista paginada de productos con filtros opcionales
-   * @param paginationDto - Parámetros de paginación (limit, offset, gender)
+   * @param paginationDto - Parámetros de paginación (limit, offset, category)
    * @returns Objeto con productos, total de registros y número de páginas
    */
   async findAll(paginationDto: PaginationDto) {
     // Destructuring con valores por defecto para evitar errores si no se envían parámetros
-    const { limit = 10, offset = 0, gender = '' } = paginationDto;
+    const { limit = 10, offset = 0, category } = paginationDto;
 
     // Consulta principal con paginación y relaciones
     const products = await this.productRepository.find({
@@ -87,13 +87,13 @@ export class ProductsService {
       order: {
         id: 'ASC', // Ordena por ID ascendente
       },
-      // Filtro condicional: si hay gender, busca ese género + productos unisex
-      where: gender ? [{ gender }, { gender: 'unisex' }] : {},
+      // Filtro condicional: si hay category, busca solo esa categoría
+      where: category ? { category } : {},
     });
 
     // Cuenta total de productos (necesario para calcular páginas)
     const totalProducts = await this.productRepository.count({
-      where: gender ? [{ gender }, { gender: 'unisex' }] : {},
+      where: category ? { category } : {},
     });
 
     return {
@@ -109,13 +109,13 @@ export class ProductsService {
 
   /**
    * Obtiene una lista paginada de productos con filtros avanzados
-   * Soporta búsqueda por texto, género, tallas y rango de precios
+   * Soporta búsqueda por texto, categoría, tallas y rango de precios
    * @param queryDto - Parámetros de filtrado y paginación avanzados
    * @returns Objeto con productos filtrados, total de registros y metadata de paginación
    */
   async findAllFiltered(queryDto: FindProductsQueryDto) {
     // Extrae los parámetros del DTO con valores por defecto
-    const { limit = 10, offset = 0, q, gender, sizes, minPrice, maxPrice } = queryDto;
+    const { limit = 10, offset = 0, q, category, sizes, minPrice, maxPrice } = queryDto;
 
     // Crea un QueryBuilder para construir una consulta SQL dinámica y flexible
     const queryBuilder = this.productRepository
@@ -131,12 +131,9 @@ export class ProductsService {
       );
     }
 
-    // Filtro 2: Género (incluye productos unisex cuando se filtra por género específico)
-    if (gender) {
-      queryBuilder.andWhere(
-        '(product.gender = :gender OR product.gender = :unisex)',
-        { gender, unisex: 'unisex' } // Siempre incluye unisex para mejor UX
-      );
+    // Filtro 2: Categoría (cats o dogs)
+    if (category) {
+      queryBuilder.andWhere('product.category = :category', { category });
     }
 
     // Filtro 3: Tallas (busca productos que tengan AL MENOS UNA de las tallas especificadas)

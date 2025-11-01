@@ -1,8 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-
 import { Type } from 'class-transformer';
-import { IsOptional, IsPositive, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsPositive, Min } from 'class-validator';
+import { ProductCategory } from '../enums';
 
+/**
+ * DTO genérico para paginación de resultados
+ * Incluye limit, offset y filtro por categoría de producto
+ */
 export class PaginationDto {
   @ApiProperty({
     default: 10,
@@ -24,8 +28,11 @@ export class PaginationDto {
 
   @ApiProperty({
     default: '',
-    description: 'Filter results by gender',
+    description: 'Filter results by category',
+    enum: ProductCategory,
+    required: false,
   })
   @IsOptional()
-  gender: 'men' | 'women' | 'unisex' | 'kid';
+  @IsEnum(ProductCategory)
+  category?: ProductCategory;
 }
