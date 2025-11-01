@@ -13,9 +13,7 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Product } from './entities/product.entity';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { PaginationDto } from './../common/dtos/pagination.dto';
+import { CreateProductDto, UpdateProductDto, FindProductsQueryDto } from './dto';
 
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
@@ -39,10 +37,20 @@ export class ProductsController {
     return this.productsService.create(createProductDto, user);
   }
 
+  /**
+   * Obtiene una lista paginada de productos con filtros opcionales avanzados
+   * Permite búsqueda por texto, filtrar por género, tallas y rango de precios
+   * @param queryDto - Parámetros de filtrado y paginación
+   * @returns Lista de productos filtrados con metadata de paginación
+   */
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    // console.log(paginationDto)
-    return this.productsService.findAll(paginationDto);
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de productos con filtros aplicados',
+  })
+  @ApiResponse({ status: 400, description: 'Parámetros de consulta inválidos' })
+  findAll(@Query() queryDto: FindProductsQueryDto) {
+    return this.productsService.findAllFiltered(queryDto);
   }
 
   @Get(':term')

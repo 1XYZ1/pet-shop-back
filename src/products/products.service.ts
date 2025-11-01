@@ -8,8 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductDto, UpdateProductDto, FindProductsQueryDto } from './dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 import { validate as isUUID } from 'uuid';
@@ -105,6 +104,83 @@ export class ProductsService {
         // Transforma los objetos ProductImage a solo strings con las URLs
         images: product.images.map((img) => img.url),
       })),
+    };
+  }
+
+  /**
+   * Obtiene una lista paginada de productos con filtros avanzados
+   * Soporta búsqueda por texto, género, tallas y rango de precios
+   * @param queryDto - Parámetros de filtrado y paginación avanzados
+   * @returns Objeto con productos filtrados, total de registros y metadata de paginación
+   */
+  async findAllFiltered(queryDto: FindProductsQueryDto) {
+    // Extrae los parámetros del DTO con valores por defecto
+    const { limit = 10, offset = 0, q, gender, sizes, minPrice, maxPrice } = queryDto;
+
+    // Crea un QueryBuilder para construir una consulta SQL dinámica y flexible
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.images', 'images') // Incluye las imágenes relacionadas
+      .orderBy('product.id', 'ASC'); // Ordena por ID ascendente para resultados consistentes
+
+    // Filtro 1: Búsqueda de texto en título y descripción (case-insensitive)
+    if (q) {
+      queryBuilder.andWhere(
+        '(LOWER(product.title) LIKE LOWER(:search) OR LOWER(product.description) LIKE LOWER(:search))',
+        { search: `%${q}%` } // Usa % para buscar coincidencias parciales (LIKE '%term%')
+      );
+    }
+
+    // Filtro 2: Género (incluye productos unisex cuando se filtra por género específico)
+    if (gender) {
+      queryBuilder.andWhere(
+        '(product.gender = :gender OR product.gender = :unisex)',
+        { gender, unisex: 'unisex' } // Siempre incluye unisex para mejor UX
+      );
+    }
+
+    // Filtro 3: Tallas (busca productos que tengan AL MENOS UNA de las tallas especificadas)
+    if (sizes) {
+      // Convierte el string "S,M,L" en array ["S", "M", "L"]
+      // Convierte a mayúsculas para hacer la búsqueda case-insensitive (s -> S)
+      const sizesArray = sizes.split(',').map((size) => size.trim().toUpperCase());
+
+      // Usa el operador && de PostgreSQL para verificar si hay overlap entre arrays
+      // product.sizes && :sizes retorna true si los arrays comparten al menos un elemento
+      queryBuilder.andWhere('product.sizes && :sizes', { sizes: sizesArray });
+    }
+
+    // Filtro 4: Precio mínimo
+    if (minPrice !== undefined && minPrice !== null) {
+      queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
+    }
+
+    // Filtro 5: Precio máximo
+    if (maxPrice !== undefined && maxPrice !== null) {
+      queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
+    }
+
+    // Ejecuta la consulta con paginación y obtiene el conteo total en una sola query optimizada
+    // getManyAndCount() es más eficiente que hacer find() y count() por separado
+    const [products, total] = await queryBuilder
+      .skip(offset) // Salta los primeros N productos
+      .take(limit) // Limita la cantidad de resultados
+      .getManyAndCount(); // Retorna [productos[], totalCount]
+
+    // Calcula el número total de páginas necesarias para mostrar todos los resultados
+    const pages = Math.ceil(total / limit);
+
+    // Retorna los productos con las imágenes transformadas a URLs simples
+    return {
+      products: products.map((product) => ({
+        ...product,
+        // Transforma las entidades ProductImage a un array simple de URLs
+        images: product.images.map((img) => img.url),
+      })),
+      total, // Total de productos que cumplen con los filtros
+      limit, // Límite usado en esta consulta (útil para el frontend)
+      offset, // Offset usado en esta consulta
+      pages, // Total de páginas disponibles
     };
   }
 
