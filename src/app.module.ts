@@ -11,6 +11,9 @@ import { MessagesWsModule } from './messages-ws/messages-ws.module';
 import { CartModule } from './cart/cart.module';
 import { ServicesModule } from './services/services.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { PetsModule } from './pets/pets.module';
+import { MedicalRecordsModule } from './medical-records/medical-records.module';
+import { GroomingRecordsModule } from './grooming-records/grooming-records.module';
 
 /**
  * Módulo raíz de la aplicación Pet Shop API
@@ -19,6 +22,9 @@ import { AppointmentsModule } from './appointments/appointments.module';
  * - ProductsModule: Gestión de productos para mascotas (gatos y perros)
  * - ServicesModule: Gestión de servicios de peluquería y veterinaria
  * - AppointmentsModule: Sistema de agendamiento de citas para servicios
+ * - PetsModule: Gestión de perfiles de mascotas
+ * - MedicalRecordsModule: Historial médico y vacunaciones
+ * - GroomingRecordsModule: Historial de sesiones de peluquería
  * - AuthModule: Autenticación y autorización de usuarios
  * - CartModule: Carrito de compras
  * - FilesModule: Manejo de archivos e imágenes
@@ -64,6 +70,12 @@ import { AppointmentsModule } from './appointments/appointments.module';
     ServicesModule,
 
     AppointmentsModule,
+
+    PetsModule,
+
+    MedicalRecordsModule,
+
+    GroomingRecordsModule,
 
   ],
 })

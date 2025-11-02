@@ -5,3 +5,7 @@
 export { ProductCategory } from './product-category.enum';
 export { ServiceType } from './service-type.enum';
 export { AppointmentStatus } from './appointment-status.enum';
+export { PetSpecies } from './pet-species.enum';
+export { PetGender } from './pet-gender.enum';
+export { PetTemperament } from './pet-temperament.enum';
+export { VisitType } from './visit-type.enum';

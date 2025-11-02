@@ -9,6 +9,7 @@ import { Product } from '../../products/entities';
  * - OneToMany con Product: un usuario puede crear muchos productos
  * - OneToMany con Service: un usuario puede crear muchos servicios
  * - OneToMany con Appointment: un usuario puede tener muchas citas agendadas
+ * - OneToMany con Pet: un usuario puede tener muchas mascotas registradas
  */
 @Entity('users')
 export class User {
@@ -69,6 +70,16 @@ export class User {
         (appointment: any) => appointment.customer
     )
     appointments: any[];
+
+    /**
+     * Relación One-to-Many con Pet
+     * Un usuario (owner) puede tener múltiples mascotas registradas
+     */
+    @OneToMany(
+        'Pet',
+        (pet: any) => pet.owner
+    )
+    pets: any[];
 
 
     @BeforeInsert()

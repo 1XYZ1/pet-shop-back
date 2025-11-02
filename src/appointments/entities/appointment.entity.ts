@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
   Index,
@@ -19,6 +20,7 @@ import { AppointmentStatus } from '../../common/enums';
  * Relaciones:
  * - ManyToOne con Service: cada cita está asociada a un servicio específico
  * - ManyToOne con User (customer): cada cita pertenece a un cliente
+ * - OneToMany con AppointmentPet: una cita puede tener múltiples mascotas asociadas
  */
 @Entity({ name: 'appointments' })
 @Index(['date', 'status']) // Índice compuesto para filtrar por fecha y estado
@@ -101,4 +103,15 @@ export class Appointment {
   })
   @UpdateDateColumn()
   updatedAt: Date;
+
+  /**
+   * Relación One-to-Many con AppointmentPet
+   * Una cita puede tener múltiples mascotas asociadas
+   * Cada mascota puede tener servicios, notas y precios individuales
+   */
+  @OneToMany(
+    'AppointmentPet',
+    (appointmentPet: any) => appointmentPet.appointment
+  )
+  appointmentPets: any[];
 }
