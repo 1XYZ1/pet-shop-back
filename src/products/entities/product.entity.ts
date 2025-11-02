@@ -9,22 +9,25 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 
 import { ProductImage } from './';
 import { User } from '../../auth/entities/user.entity';
-import { ProductCategory } from '../../common/enums';
+import { ProductSpecies, ProductType } from '../../common/enums';
 
 /**
  * Entidad Product con índices optimizados para consultas frecuentes
  * Índices agregados:
- * - category: Para filtros por categoría (gatos/perros)
- * - price: Para filtros y ordenamiento por precio
- * - [category, price]: Índice compuesto para consultas que filtran por ambos
+ * - type: Para filtros por tipo de producto (alimento, accesorio, juguete, etc.)
+ * - species: Para filtros por especie (gatos/perros)
+ * - [type, species]: Índice compuesto para consultas que filtran por ambos
+ * - [type, price]: Índice compuesto para consultas de tipo con ordenamiento por precio
  */
 @Entity({ name: 'products' })
-@Index(['category']) // Índice simple para búsquedas por categoría
-@Index(['price']) // Índice simple para filtros y ordenamiento por precio
-@Index(['category', 'price']) // Índice compuesto para consultas combinadas
+@Index(['type']) // Índice para búsquedas por tipo de producto
+@Index(['species']) // Índice para búsquedas por especie
+@Index(['type', 'species']) // Índice compuesto para consultas combinadas
+@Index(['type', 'price']) // Índice compuesto para consultas de tipo con precio
 export class Product {
   @ApiProperty({
     example: 'cd533345-f1f3-48c9-a62e-7dc2da50c8f8',
@@ -94,16 +97,28 @@ export class Product {
   sizes: string[];
 
   @ApiProperty({
-    description: 'Product category (cats or dogs)',
-    enum: ProductCategory,
-    example: ProductCategory.DOGS,
+    description: 'Product type (food, accessories, toys, hygiene, etc.)',
+    enum: ProductType,
+    example: ProductType.ALIMENTO_SECO,
   })
   @Column({
     type: 'enum',
-    enum: ProductCategory,
-    nullable: true, // Temporal: permitir null para migración de datos
+    enum: ProductType,
   })
-  category: ProductCategory;
+  type: ProductType;
+
+  @ApiProperty({
+    description: 'Pet species this product is for (optional - some products are universal)',
+    enum: ProductSpecies,
+    example: ProductSpecies.DOGS,
+    required: false,
+  })
+  @Column({
+    type: 'enum',
+    enum: ProductSpecies,
+    nullable: true,
+  })
+  species?: ProductSpecies;
 
   @ApiProperty()
   @Column('text', {
@@ -120,7 +135,8 @@ export class Product {
   })
   images?: ProductImage[];
 
-  @ManyToOne(() => User, (user) => user.product, { eager: true })
+  @ManyToOne(() => User, (user) => user.product)
+  @Exclude()
   user: User;
 
   @BeforeInsert()

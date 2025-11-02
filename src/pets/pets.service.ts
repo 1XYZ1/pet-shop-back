@@ -9,6 +9,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { validate as isUUID } from 'uuid';
+import { existsSync, unlinkSync } from 'fs';
+import { join } from 'path';
 
 import { CreatePetDto, UpdatePetDto } from './dto';
 import { Pet } from './entities';
@@ -433,6 +435,111 @@ export class PetsService {
         throw new InternalServerErrorException(
             'Error inesperado, revise los logs del servidor'
         );
+    }
+
+    /**
+     * Actualiza la foto de perfil de una mascota
+     *
+     * @param id - UUID de la mascota
+     * @param photoUrl - URL completa de la nueva foto
+     * @param fileName - Nombre del archivo guardado
+     * @param user - Usuario que solicita la actualización
+     * @returns La mascota con la foto actualizada
+     *
+     * Comportamiento:
+     * - Valida ownership antes de actualizar
+     * - Si existía una foto anterior, la elimina del filesystem
+     * - En caso de error al guardar, elimina la nueva foto
+     * - Actualiza el campo profilePhoto con la nueva URL
+     */
+    async updatePhoto(
+        id: string,
+        photoUrl: string,
+        fileName: string,
+        user: User
+    ): Promise<Pet> {
+        // Validar ownership y obtener la mascota
+        const pet = await this.findOne(id, user);
+
+        // Si había una foto anterior, eliminarla del sistema de archivos
+        if (pet.profilePhoto) {
+            const oldFileName = pet.profilePhoto.split('/').pop();
+            const oldPath = join(__dirname, '../../static/pets', oldFileName);
+
+            if (existsSync(oldPath)) {
+                try {
+                    unlinkSync(oldPath);
+                    this.logger.log(`Deleted old photo: ${oldFileName}`);
+                } catch (error) {
+                    this.logger.error(`Error deleting old photo: ${error}`);
+                }
+            }
+        }
+
+        // Actualizar con la nueva URL
+        pet.profilePhoto = photoUrl;
+
+        try {
+            await this.petRepository.save(pet);
+            return pet;
+        } catch (error) {
+            // Si falla la actualización, eliminar el archivo nuevo
+            const newPath = join(__dirname, '../../static/pets', fileName);
+            if (existsSync(newPath)) {
+                unlinkSync(newPath);
+            }
+            this.handleDBExceptions(error);
+        }
+    }
+
+    /**
+     * Elimina la foto de perfil de una mascota
+     *
+     * @param id - UUID de la mascota
+     * @param user - Usuario que solicita la eliminación
+     * @returns La mascota sin foto de perfil
+     *
+     * Comportamiento:
+     * - Valida ownership antes de eliminar
+     * - Elimina el archivo físico del servidor
+     * - Establece profilePhoto en null
+     * - Si no hay foto, retorna la mascota sin cambios
+     */
+    async deletePhoto(id: string, user: User): Promise<Pet> {
+        // Validar ownership y obtener la mascota
+        const pet = await this.findOne(id, user);
+
+        // Si no hay foto, retornar sin hacer nada
+        if (!pet.profilePhoto) {
+            return pet;
+        }
+
+        // Extraer el nombre del archivo de la URL
+        const fileName = pet.profilePhoto.split('/').pop();
+        const filePath = join(__dirname, '../../static/pets', fileName);
+
+        // Eliminar el archivo físico si existe
+        if (existsSync(filePath)) {
+            try {
+                unlinkSync(filePath);
+                this.logger.log(`Deleted photo: ${fileName}`);
+            } catch (error) {
+                this.logger.error(`Error deleting photo: ${error}`);
+                throw new InternalServerErrorException(
+                    'Error al eliminar el archivo de foto'
+                );
+            }
+        }
+
+        // Actualizar el registro en la base de datos
+        pet.profilePhoto = null;
+
+        try {
+            await this.petRepository.save(pet);
+            return pet;
+        } catch (error) {
+            this.handleDBExceptions(error);
+        }
     }
 
     /**

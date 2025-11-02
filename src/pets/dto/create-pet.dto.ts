@@ -124,11 +124,11 @@ export class CreatePetDto {
     microchipNumber?: string;
 
     @ApiProperty({
-        description: 'URL de la foto de perfil de la mascota',
-        example: 'https://ejemplo.com/mascotas/max.jpg',
+        description: 'URL de la foto de perfil de la mascota (se genera automáticamente al usar PATCH /pets/:id/photo)',
+        example: 'http://localhost:3000/api/files/pet/abc123-def456.jpg',
         required: false
     })
-    @IsUrl()
+    @IsString()
     @IsOptional()
     profilePhoto?: string;
 

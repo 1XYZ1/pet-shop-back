@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsPositive, Min } from 'class-validator';
-import { ProductCategory } from '../enums';
+import { ProductSpecies } from '../enums';
 
 /**
  * DTO genérico para paginación de resultados
- * Incluye limit, offset y filtro por categoría de producto
+ * Incluye limit, offset y filtro por especie de mascota
  */
 export class PaginationDto {
   @ApiProperty({
@@ -28,11 +28,11 @@ export class PaginationDto {
 
   @ApiProperty({
     default: '',
-    description: 'Filter results by category',
-    enum: ProductCategory,
+    description: 'Filter results by pet species',
+    enum: ProductSpecies,
     required: false,
   })
   @IsOptional()
-  @IsEnum(ProductCategory)
-  category?: ProductCategory;
+  @IsEnum(ProductSpecies)
+  species?: ProductSpecies;
 }

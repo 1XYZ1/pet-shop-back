@@ -39,14 +39,14 @@ export class ProductsController {
 
   /**
    * Obtiene una lista paginada de productos con filtros opcionales avanzados
-   * Permite búsqueda por texto, filtrar por género, tallas y rango de precios
+   * Permite búsqueda por texto, filtrar por tipo de producto, especie, tallas y rango de precios
    * @param queryDto - Parámetros de filtrado y paginación
    * @returns Lista de productos filtrados con metadata de paginación
    */
   @Get()
   @ApiResponse({
     status: 200,
-    description: 'Lista de productos con filtros aplicados',
+    description: 'Lista de productos filtrados por tipo, especie y otros criterios',
   })
   @ApiResponse({ status: 400, description: 'Parámetros de consulta inválidos' })
   findAll(@Query() queryDto: FindProductsQueryDto) {

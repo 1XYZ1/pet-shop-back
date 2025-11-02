@@ -8,8 +8,14 @@ import {
     Delete,
     ParseUUIDPipe,
     Query,
+    UploadedFile,
+    UseInterceptors,
+    BadRequestException,
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 import { PetsService } from './pets.service';
 import { CreatePetDto, UpdatePetDto } from './dto';
@@ -18,6 +24,7 @@ import { Pet } from './entities';
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
 import { PaginationDto } from '../common/dtos/pagination.dto';
+import { petImageFilter, fileNamer } from '../files/helpers';
 
 /**
  * Controlador de Mascotas
@@ -31,7 +38,10 @@ import { PaginationDto } from '../common/dtos/pagination.dto';
 @Controller('pets')
 export class PetsController {
 
-    constructor(private readonly petsService: PetsService) {}
+    constructor(
+        private readonly petsService: PetsService,
+        private readonly configService: ConfigService,
+    ) {}
 
     /**
      * POST /api/pets
@@ -204,6 +214,97 @@ export class PetsController {
         @GetUser() user: User
     ) {
         return this.petsService.update(id, updatePetDto, user);
+    }
+
+    /**
+     * PATCH /api/pets/:id/photo
+     * Actualiza la foto de perfil de una mascota
+     *
+     * @param id - UUID de la mascota
+     * @param file - Archivo de imagen (jpg, jpeg, png, gif)
+     * @param user - Usuario autenticado
+     * @returns Mascota con la nueva foto de perfil
+     *
+     * Validaciones:
+     * - Solo el owner o admin pueden actualizar
+     * - Formatos permitidos: jpg, jpeg, png, gif
+     * - La foto anterior se elimina automáticamente
+     */
+    @Patch(':id/photo')
+    @Auth()
+    @UseInterceptors(
+        FileInterceptor('file', {
+            fileFilter: petImageFilter,
+            storage: diskStorage({
+                destination: './static/pets',
+                filename: fileNamer,
+            }),
+        }),
+    )
+    @ApiResponse({
+        status: 200,
+        description: 'Foto de perfil actualizada exitosamente',
+        type: Pet,
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Archivo inválido o validación fallida',
+    })
+    @ApiResponse({
+        status: 403,
+        description: 'Acceso denegado - No eres el dueño de esta mascota',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Mascota no encontrada',
+    })
+    updatePhoto(
+        @Param('id', ParseUUIDPipe) id: string,
+        @UploadedFile() file: Express.Multer.File,
+        @GetUser() user: User
+    ) {
+        if (!file) {
+            throw new BadRequestException('Make sure that the file is an image');
+        }
+
+        const secureUrl = `${this.configService.get('HOST_API')}/files/pet/${file.filename}`;
+
+        return this.petsService.updatePhoto(id, secureUrl, file.filename, user);
+    }
+
+    /**
+     * DELETE /api/pets/:id/photo
+     * Elimina la foto de perfil de una mascota
+     *
+     * @param id - UUID de la mascota
+     * @param user - Usuario autenticado
+     * @returns Mascota sin foto de perfil
+     *
+     * Comportamiento:
+     * - Elimina el archivo físico del servidor
+     * - Establece profilePhoto en null
+     * - Solo el owner o admin pueden eliminar
+     */
+    @Delete(':id/photo')
+    @Auth()
+    @ApiResponse({
+        status: 200,
+        description: 'Foto de perfil eliminada exitosamente',
+        type: Pet,
+    })
+    @ApiResponse({
+        status: 403,
+        description: 'Acceso denegado - No eres el dueño de esta mascota',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Mascota no encontrada',
+    })
+    deletePhoto(
+        @Param('id', ParseUUIDPipe) id: string,
+        @GetUser() user: User
+    ) {
+        return this.petsService.deletePhoto(id, user);
     }
 
     /**

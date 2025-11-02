@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { ProductCategory, ServiceType, AppointmentStatus } from '../../common/enums';
+import { ProductSpecies, ProductType, ServiceType, AppointmentStatus } from '../../common/enums';
 
 /**
  * Interface para productos en el seed
@@ -13,12 +13,11 @@ interface SeedProduct {
   slug: string;
   tags: string[];
   title: string;
-  type: ValidTypes;
-  category: ProductCategory;
+  type: ProductType;
+  species?: ProductSpecies;
 }
 
 type ValidSizes = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL' | '500g' | '1kg' | '3kg' | '7kg' | '15kg' | '20kg';
-type ValidTypes = 'alimento-seco' | 'alimento-humedo' | 'snacks' | 'accesorios' | 'juguetes' | 'higiene';
 
 /**
  * Interface para servicios en el seed
@@ -40,8 +39,7 @@ interface SeedAppointment {
   date: Date;
   status: AppointmentStatus;
   notes?: string;
-  petName: string;
-  petBreed?: string;
+  petIndex: number; // Índice de la mascota en el array de mascotas
   serviceIndex: number; // Índice del servicio en el array de servicios
   customerIndex: number; // Índice del usuario cliente en el array de usuarios
 }
@@ -132,10 +130,10 @@ export const initialData: SeedData = {
       price: 45.99,
       sizes: ['3kg', '7kg', '15kg', '20kg'],
       slug: 'alimento_perro_adulto_raza_grande',
-      type: 'alimento-seco',
+      type: ProductType.ALIMENTO_SECO,
       tags: ['perro', 'adulto', 'premium', 'raza-grande'],
       title: 'Alimento Premium Perro Adulto Raza Grande',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -145,10 +143,10 @@ export const initialData: SeedData = {
       price: 38.50,
       sizes: ['1kg', '3kg', '7kg', '15kg'],
       slug: 'alimento_cachorro_todas_razas',
-      type: 'alimento-seco',
+      type: ProductType.ALIMENTO_SECO,
       tags: ['cachorro', 'perro', 'desarrollo', 'premium'],
       title: 'Alimento Cachorro Todas las Razas',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -158,10 +156,10 @@ export const initialData: SeedData = {
       price: 15.99,
       sizes: ['S', 'M', 'L', 'XL'],
       slug: 'collar_perro_nylon_ajustable',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['collar', 'perro', 'nylon', 'ajustable', 'reflectante'],
       title: 'Collar Ajustable Nylon para Perros',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -171,10 +169,10 @@ export const initialData: SeedData = {
       price: 85.00,
       sizes: ['M'],
       slug: 'pelota_lanzadora_automatica_perros',
-      type: 'juguetes',
+      type: ProductType.JUGUETES,
       tags: ['pelota', 'lanzador', 'perro', 'juguete', 'ejercicio'],
       title: 'Pelota Lanzadora Automática',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -184,10 +182,10 @@ export const initialData: SeedData = {
       price: 16.50,
       sizes: ['M', 'L'],
       slug: 'shampoo_hipoalergenico_perros',
-      type: 'higiene',
+      type: ProductType.HIGIENE,
       tags: ['shampoo', 'hipoalergénico', 'perro', 'piel-sensible'],
       title: 'Shampoo Hipoalergénico para Perros',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -197,10 +195,10 @@ export const initialData: SeedData = {
       price: 95.00,
       sizes: ['M', 'L', 'XL'],
       slug: 'cama_ortopedica_perro_memory_foam',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['cama', 'perro', 'ortopédica', 'memory-foam', 'senior'],
       title: 'Cama Ortopédica Memory Foam',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -210,10 +208,10 @@ export const initialData: SeedData = {
       price: 12.99,
       sizes: ['S', 'M', 'L'],
       slug: 'premios_dentales_perro',
-      type: 'snacks',
+      type: ProductType.SNACKS,
       tags: ['perro', 'dental', 'higiene', 'premios', 'snacks'],
       title: 'Premios Dentales para Perros',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -223,10 +221,10 @@ export const initialData: SeedData = {
       price: 32.00,
       sizes: ['M', 'L'],
       slug: 'correa_retractil_perro_5m',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['correa', 'perro', 'retráctil', 'paseo', 'led'],
       title: 'Correa Retráctil 5 metros con LED',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -236,10 +234,10 @@ export const initialData: SeedData = {
       price: 28.50,
       sizes: ['S', 'M', 'L', 'XL'],
       slug: 'arnes_perro_acolchado_reflectante',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['arnés', 'perro', 'acolchado', 'reflectante', 'seguridad'],
       title: 'Arnés Acolchado Reflectante',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -249,10 +247,10 @@ export const initialData: SeedData = {
       price: 18.99,
       sizes: ['M', 'L', 'XL'],
       slug: 'huesos_masticables_naturales',
-      type: 'snacks',
+      type: ProductType.SNACKS,
       tags: ['perro', 'hueso', 'natural', 'masticable', 'dental'],
       title: 'Huesos Masticables Naturales',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -262,10 +260,10 @@ export const initialData: SeedData = {
       price: 42.00,
       sizes: ['M'],
       slug: 'lata_perro_pollo_verduras_pack12',
-      type: 'alimento-humedo',
+      type: ProductType.ALIMENTO_HUMEDO,
       tags: ['perro', 'húmedo', 'pollo', 'lata', 'pack'],
       title: 'Pack x12 Latas Pollo y Verduras 375g',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -275,10 +273,10 @@ export const initialData: SeedData = {
       price: 14.50,
       sizes: ['S'],
       slug: 'snacks_entrenamiento_cachorros',
-      type: 'snacks',
+      type: ProductType.SNACKS,
       tags: ['cachorro', 'perro', 'entrenamiento', 'premios', 'adiestramiento'],
       title: 'Snacks Entrenamiento para Cachorros',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -288,10 +286,10 @@ export const initialData: SeedData = {
       price: 48.00,
       sizes: ['M', 'L'],
       slug: 'comedero_elevado_acero_ajustable',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['comedero', 'acero', 'perro', 'elevado', 'ajustable'],
       title: 'Comedero Elevado Ajustable',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -301,10 +299,10 @@ export const initialData: SeedData = {
       price: 13.99,
       sizes: ['S', 'M', 'L'],
       slug: 'cuerda_algodon_trenzada',
-      type: 'juguetes',
+      type: ProductType.JUGUETES,
       tags: ['cuerda', 'algodón', 'perro', 'dental', 'juguete'],
       title: 'Cuerda Algodón Trenzada',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
     {
       description:
@@ -314,10 +312,10 @@ export const initialData: SeedData = {
       price: 75.00,
       sizes: ['S', 'M', 'L'],
       slug: 'transportadora_rigida_perro_viaje',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['transportadora', 'viaje', 'perro', 'aéreo', 'iata'],
       title: 'Transportadora Rígida para Viaje',
-      category: ProductCategory.DOGS,
+      species: ProductSpecies.DOGS,
     },
 
     // ============= PRODUCTOS PARA GATOS (15 productos) =============
@@ -329,10 +327,10 @@ export const initialData: SeedData = {
       price: 38.99,
       sizes: ['1kg', '3kg', '7kg', '15kg'],
       slug: 'alimento_gato_adulto_premium',
-      type: 'alimento-seco',
+      type: ProductType.ALIMENTO_SECO,
       tags: ['gato', 'adulto', 'premium', 'salud-urinaria'],
       title: 'Alimento Premium Gato Adulto',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -342,10 +340,10 @@ export const initialData: SeedData = {
       price: 35.50,
       sizes: ['500g', '1kg', '3kg', '7kg'],
       slug: 'alimento_gatito_crecimiento',
-      type: 'alimento-seco',
+      type: ProductType.ALIMENTO_SECO,
       tags: ['gatito', 'cachorro', 'gato', 'desarrollo', 'kitten'],
       title: 'Alimento Gatito en Crecimiento',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -355,10 +353,10 @@ export const initialData: SeedData = {
       price: 180.00,
       sizes: ['L'],
       slug: 'arenero_autolimpiable_automatico',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['arenero', 'gato', 'automático', 'autolimpiable', 'tecnología'],
       title: 'Arenero Autolimpiable Automático',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -368,10 +366,10 @@ export const initialData: SeedData = {
       price: 22.00,
       sizes: ['S'],
       slug: 'raton_interactivo_sensor',
-      type: 'juguetes',
+      type: ProductType.JUGUETES,
       tags: ['ratón', 'interactivo', 'gato', 'sensor', 'juguete'],
       title: 'Ratón Interactivo con Sensor',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -381,10 +379,10 @@ export const initialData: SeedData = {
       price: 95.00,
       sizes: ['L'],
       slug: 'rascador_torre_hamaca_120cm',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['rascador', 'gato', 'torre', 'hamaca', 'sisal'],
       title: 'Rascador Torre con Hamaca 120cm',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -394,10 +392,10 @@ export const initialData: SeedData = {
       price: 45.00,
       sizes: ['M'],
       slug: 'fuente_agua_automatica_gatos',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['bebedero', 'fuente', 'gato', 'automático', 'filtro'],
       title: 'Fuente de Agua Automática',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -407,10 +405,10 @@ export const initialData: SeedData = {
       price: 38.50,
       sizes: ['S'],
       slug: 'pate_gato_salmon_pack24',
-      type: 'alimento-humedo',
+      type: ProductType.ALIMENTO_HUMEDO,
       tags: ['gato', 'paté', 'salmón', 'gourmet', 'pack'],
       title: 'Pack x24 Paté Gato Salmón 85g',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -420,10 +418,10 @@ export const initialData: SeedData = {
       price: 9.99,
       sizes: ['M'],
       slug: 'galletas_gato_pollo',
-      type: 'snacks',
+      type: ProductType.SNACKS,
       tags: ['gato', 'galletas', 'snacks', 'pollo', 'dental'],
       title: 'Galletas para Gatos Sabor Pollo',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -433,10 +431,10 @@ export const initialData: SeedData = {
       price: 28.00,
       sizes: ['S'],
       slug: 'stick_cremoso_gato_atun_pack40',
-      type: 'snacks',
+      type: ProductType.SNACKS,
       tags: ['gato', 'stick', 'cremoso', 'atún', 'premio'],
       title: 'Pack x40 Stick Cremoso Atún',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -446,10 +444,10 @@ export const initialData: SeedData = {
       price: 11.50,
       sizes: ['M'],
       slug: 'varita_interactiva_plumas',
-      type: 'juguetes',
+      type: ProductType.JUGUETES,
       tags: ['varita', 'interactivo', 'gato', 'plumas', 'ejercicio'],
       title: 'Varita Interactiva con Plumas',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -459,10 +457,10 @@ export const initialData: SeedData = {
       price: 42.00,
       sizes: ['M', 'L'],
       slug: 'arenero_cerrado_filtro_carbon',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['arenero', 'gato', 'cerrado', 'filtro', 'control-olores'],
       title: 'Arenero Cerrado con Filtro',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -472,10 +470,10 @@ export const initialData: SeedData = {
       price: 42.99,
       sizes: ['1kg', '3kg', '7kg'],
       slug: 'alimento_gato_senior',
-      type: 'alimento-seco',
+      type: ProductType.ALIMENTO_SECO,
       tags: ['gato', 'senior', 'mayores', 'salud-renal', '+7'],
       title: 'Alimento Gato Senior +7 años',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -485,10 +483,10 @@ export const initialData: SeedData = {
       price: 7.50,
       sizes: ['S'],
       slug: 'raton_peluche_catnip_pack3',
-      type: 'juguetes',
+      type: ProductType.JUGUETES,
       tags: ['ratón', 'catnip', 'gato', 'peluche', 'pack'],
       title: 'Pack x3 Ratón Peluche con Catnip',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -498,10 +496,10 @@ export const initialData: SeedData = {
       price: 32.00,
       sizes: ['M'],
       slug: 'comedero_doble_ceramica_elevado',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['comedero', 'cerámica', 'gato', 'elevado', 'doble'],
       title: 'Comedero Doble Cerámica Elevado',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
     {
       description:
@@ -511,10 +509,10 @@ export const initialData: SeedData = {
       price: 38.00,
       sizes: ['M'],
       slug: 'cama_cueva_gatos_felpa',
-      type: 'accesorios',
+      type: ProductType.ACCESORIOS,
       tags: ['cama', 'cueva', 'gato', 'felpa', 'confort'],
       title: 'Cama tipo Cueva para Gatos',
-      category: ProductCategory.CATS,
+      species: ProductSpecies.CATS,
     },
   ],
 
@@ -589,63 +587,57 @@ export const initialData: SeedData = {
       date: new Date('2025-11-05T10:00:00.000Z'),
       status: AppointmentStatus.CONFIRMED,
       notes: 'Primera vez que viene Max, es un poco nervioso con el agua',
-      petName: 'Max',
-      petBreed: 'Golden Retriever',
+      petIndex: 0, // Max - Golden Retriever
       serviceIndex: 0, // Peluquería Canina Básica
-      customerIndex: 4, // Ana López
+      customerIndex: 1, // owner de Max
     },
     {
       date: new Date('2025-11-06T14:30:00.000Z'),
       status: AppointmentStatus.PENDING,
       notes: 'Luna necesita corte de uñas urgente',
-      petName: 'Luna',
-      petBreed: 'Persa',
+      petIndex: 1, // Luna - Siamés
       serviceIndex: 3, // Consulta Veterinaria General
-      customerIndex: 5, // Juan Pérez
+      customerIndex: 1, // owner de Luna
     },
     {
       date: new Date('2025-11-07T09:00:00.000Z'),
       status: AppointmentStatus.CONFIRMED,
       notes: 'Vacunación anual de Rocky',
-      petName: 'Rocky',
-      petBreed: 'Bulldog Francés',
+      petIndex: 2, // Rocky - Bulldog Francés
       serviceIndex: 4, // Vacunación y Desparasitación
-      customerIndex: 6, // Laura VIP
+      customerIndex: 2, // owner de Rocky
     },
     {
       date: new Date('2025-11-08T16:00:00.000Z'),
       status: AppointmentStatus.PENDING,
-      petName: 'Miau',
-      petBreed: 'Siamés',
+      notes: 'Michi necesita revisión de su pelaje',
+      petIndex: 3, // Michi - Persa
       serviceIndex: 3, // Consulta Veterinaria General
-      customerIndex: 4, // Ana López
+      customerIndex: 3, // owner de Michi
     },
     {
       date: new Date('2025-11-10T11:00:00.000Z'),
       status: AppointmentStatus.CONFIRMED,
-      notes: 'Thor necesita corte especial para competencia',
-      petName: 'Thor',
-      petBreed: 'Pastor Alemán',
+      notes: 'Bella necesita tratamiento para ansiedad',
+      petIndex: 4, // Bella - Beagle
       serviceIndex: 1, // Peluquería Canina Premium
-      customerIndex: 6, // Laura VIP
+      customerIndex: 4, // owner de Bella
     },
     {
       date: new Date('2025-11-12T10:00:00.000Z'),
       status: AppointmentStatus.COMPLETED,
       notes: 'Chequeo general de Coco, todo salió bien',
-      petName: 'Coco',
-      petBreed: 'Schnauzer',
+      petIndex: 5, // Coco - Cacatúa
       serviceIndex: 3, // Consulta Veterinaria General
-      customerIndex: 5, // Juan Pérez
+      customerIndex: 5, // owner de Coco
     },
     {
       date: new Date('2025-11-13T15:00:00.000Z'),
       status: AppointmentStatus.CANCELLED,
       notes: 'Cliente canceló por viaje',
-      petName: 'Princesa',
-      petBreed: 'Chihuahua',
+      petIndex: 6, // Toby - Mini Lop
       serviceIndex: 0, // Peluquería Canina Básica
-      customerIndex: 4, // Ana López
+      customerIndex: 0, // owner de Toby (admin)
     },
   ],
 };

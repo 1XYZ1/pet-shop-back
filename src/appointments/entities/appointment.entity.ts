@@ -7,10 +7,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../auth/entities/user.entity';
 import { Service } from '../../services/entities/service.entity';
+import { Pet } from '../../pets/entities/pet.entity';
 import { AppointmentStatus } from '../../common/enums';
 
 /**
@@ -18,9 +20,10 @@ import { AppointmentStatus } from '../../common/enums';
  * Gestiona el sistema de agendamiento de servicios para las mascotas de los clientes
  *
  * Relaciones:
+ * - ManyToOne con Pet: cada cita está asociada a una mascota específica
  * - ManyToOne con Service: cada cita está asociada a un servicio específico
  * - ManyToOne con User (customer): cada cita pertenece a un cliente
- * - OneToMany con AppointmentPet: una cita puede tener múltiples mascotas asociadas
+ * - OneToMany con AppointmentPet: una cita puede tener múltiples mascotas asociadas (soporte legacy)
  */
 @Entity({ name: 'appointments' })
 @Index(['date', 'status']) // Índice compuesto para filtrar por fecha y estado
@@ -61,20 +64,19 @@ export class Appointment {
   @Column('text', { nullable: true })
   notes?: string;
 
+  /**
+   * Relación Many-to-One con Pet
+   * Cada cita está asociada a una mascota específica del sistema
+   * La mascota debe pertenecer al usuario que crea la cita
+   * Se usa JoinColumn para especificar el nombre de la columna FK como 'petId'
+   */
   @ApiProperty({
-    example: 'Max',
-    description: 'Pet name',
+    description: 'Pet associated with this appointment',
+    type: () => Pet,
   })
-  @Column('text')
-  petName: string;
-
-  @ApiProperty({
-    example: 'Golden Retriever',
-    description: 'Pet breed (optional)',
-    required: false,
-  })
-  @Column('text', { nullable: true })
-  petBreed?: string;
+  @ManyToOne(() => Pet, (pet) => pet.appointmentPets, { eager: true })
+  @JoinColumn({ name: 'petId' })
+  pet: Pet;
 
   /**
    * Relación Many-to-One con Service

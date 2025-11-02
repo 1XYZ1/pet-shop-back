@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
-  MinLength,
   IsOptional,
   IsDateString,
   IsUUID,
@@ -10,6 +9,7 @@ import {
 /**
  * DTO para crear una nueva cita
  * Valida todos los campos requeridos y opcionales según las reglas de negocio
+ * Actualizado para usar petId en lugar de petName/petBreed para mantener relación con la entidad Pet
  */
 export class CreateAppointmentDto {
   @ApiProperty({
@@ -20,22 +20,11 @@ export class CreateAppointmentDto {
   date: string;
 
   @ApiProperty({
-    description: 'Pet name',
-    example: 'Max',
-    minLength: 2,
+    description: 'Pet ID (UUID) - La mascota debe pertenecer al usuario autenticado',
+    example: '09248618-8139-49c5-a97a-06a91f3fc5fe',
   })
-  @IsString()
-  @MinLength(2)
-  petName: string;
-
-  @ApiProperty({
-    description: 'Pet breed (optional)',
-    example: 'Golden Retriever',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  petBreed?: string;
+  @IsUUID()
+  petId: string;
 
   @ApiProperty({
     description: 'Additional notes about the appointment or pet',

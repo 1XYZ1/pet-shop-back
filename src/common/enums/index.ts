@@ -2,7 +2,8 @@
  * Barrel file para exportar todos los enums compartidos
  * Facilita la importación desde otros módulos
  */
-export { ProductCategory } from './product-category.enum';
+export { ProductSpecies } from './product-species.enum';
+export { ProductType } from './product-type.enum';
 export { ServiceType } from './service-type.enum';
 export { AppointmentStatus } from './appointment-status.enum';
 export { PetSpecies } from './pet-species.enum';

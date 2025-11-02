@@ -9,7 +9,7 @@ import {
   IsString,
   MinLength
 } from 'class-validator';
-import { ProductCategory } from '../../common/enums';
+import { ProductSpecies, ProductType } from '../../common/enums';
 
 /**
  * DTO para crear un nuevo producto
@@ -70,12 +70,22 @@ export class CreateProductDto {
   sizes: string[]
 
   @ApiProperty({
-    description: 'Product category',
-    enum: ProductCategory,
-    example: ProductCategory.DOGS,
+    description: 'Product type (food, accessories, toys, hygiene, etc.)',
+    enum: ProductType,
+    example: ProductType.ALIMENTO_SECO,
   })
-  @IsEnum(ProductCategory)
-  category: ProductCategory;
+  @IsEnum(ProductType)
+  type: ProductType;
+
+  @ApiProperty({
+    description: 'Pet species (optional - some products work for both cats and dogs)',
+    enum: ProductSpecies,
+    example: ProductSpecies.DOGS,
+    required: false,
+  })
+  @IsEnum(ProductSpecies)
+  @IsOptional()
+  species?: ProductSpecies;
 
   @ApiProperty({
     description: 'Product tags for search and filtering',

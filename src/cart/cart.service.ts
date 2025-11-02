@@ -43,7 +43,7 @@ export class CartService {
     try {
       let cart = await this.cartRepository.findOne({
         where: { userId },
-        relations: ['items', 'items.product'],
+        relations: ['items', 'items.product', 'items.product.images'],
       });
 
       if (!cart) {

@@ -15,6 +15,8 @@ import { MedicalRecord } from '../medical-records/entities/medical-record.entity
 import { Vaccination } from '../medical-records/entities/vaccination.entity';
 import { GroomingRecord } from '../grooming-records/entities/grooming-record.entity';
 import { AppointmentPet } from '../appointments/entities/appointment-pet.entity';
+import { Cart } from '../cart/entities/cart.entity';
+import { CartItem } from '../cart/entities/cart-item.entity';
 
 /**
  * Módulo de Seed
@@ -38,6 +40,8 @@ import { AppointmentPet } from '../appointments/entities/appointment-pet.entity'
       Vaccination,
       GroomingRecord,
       AppointmentPet,
+      Cart,
+      CartItem,
     ]),
     ProductsModule,
     AuthModule,

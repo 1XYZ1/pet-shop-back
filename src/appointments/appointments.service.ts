@@ -13,6 +13,7 @@ import { validate as isUUID } from 'uuid';
 import { CreateAppointmentDto, UpdateAppointmentDto, FindAppointmentsQueryDto } from './dto';
 import { Appointment } from './entities';
 import { User } from '../auth/entities/user.entity';
+import { Pet } from '../pets/entities/pet.entity';
 import { ServicesService } from '../services/services.service';
 import { ValidRoles } from '../auth/interfaces';
 
@@ -30,25 +31,44 @@ export class AppointmentsService {
     @InjectRepository(Appointment)
     private readonly appointmentRepository: Repository<Appointment>,
 
+    // Inyección del repositorio de mascotas para validar ownership
+    @InjectRepository(Pet)
+    private readonly petRepository: Repository<Pet>,
+
     // Inyección del servicio de servicios para validar que el servicio existe
     private readonly servicesService: ServicesService,
   ) {}
 
   /**
    * Crea una nueva cita
-   * Valida que la fecha sea futura y que el servicio exista
+   * Valida que la fecha sea futura, que el servicio exista y que la mascota pertenezca al usuario
    * @param createAppointmentDto - Datos de la cita a crear
    * @param customer - Usuario que está creando la cita (cliente)
-   * @returns La cita creada
+   * @returns La cita creada con la mascota y servicio populados
    */
   async create(createAppointmentDto: CreateAppointmentDto, customer: User): Promise<Appointment> {
-    const { serviceId, date, ...appointmentData } = createAppointmentDto;
+    const { serviceId, petId, date, ...appointmentData } = createAppointmentDto;
 
     // Validar que la fecha sea futura
     const appointmentDate = new Date(date);
     const now = new Date();
     if (appointmentDate <= now) {
       throw new BadRequestException('La fecha de la cita debe ser futura');
+    }
+
+    // Validar que la mascota existe y pertenece al usuario autenticado
+    const pet = await this.petRepository.findOne({
+      where: {
+        id: petId,
+        owner: { id: customer.id },
+        isActive: true
+      },
+    });
+
+    if (!pet) {
+      throw new NotFoundException(
+        'Mascota no encontrada o no pertenece al usuario autenticado'
+      );
     }
 
     // Validar que el servicio existe
@@ -59,6 +79,7 @@ export class AppointmentsService {
       const appointment = this.appointmentRepository.create({
         ...appointmentData,
         date: appointmentDate,
+        pet,
         service,
         customer,
       });
@@ -80,14 +101,15 @@ export class AppointmentsService {
    *
    * @param queryDto - Parámetros de filtrado y paginación
    * @param user - Usuario que realiza la consulta
-   * @returns Objeto con citas filtradas, total de registros y metadata
+   * @returns Objeto con citas filtradas, total de registros y metadata, incluyendo el objeto pet poblado
    */
   async findAll(queryDto: FindAppointmentsQueryDto, user: User) {
     const { limit = 10, offset = 0, status, serviceId, dateFrom, dateTo } = queryDto;
 
-    // Construye el query builder
+    // Construye el query builder incluyendo la relación con pet
     const queryBuilder = this.appointmentRepository
       .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.pet', 'pet')
       .leftJoinAndSelect('appointment.service', 'service')
       .leftJoinAndSelect('appointment.customer', 'customer')
       .orderBy('appointment.date', 'ASC'); // Ordena por fecha ascendente (próximas citas primero)
@@ -178,13 +200,13 @@ export class AppointmentsService {
    * @param id - ID de la cita a actualizar
    * @param updateAppointmentDto - Nuevos datos de la cita
    * @param user - Usuario que realiza la actualización
-   * @returns La cita actualizada
+   * @returns La cita actualizada con pet y service poblados
    */
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto, user: User): Promise<Appointment> {
     // Busca la cita y valida permisos
     const appointment = await this.findOne(id, user);
 
-    const { serviceId, date, status, ...appointmentData } = updateAppointmentDto;
+    const { serviceId, petId, date, status, ...appointmentData } = updateAppointmentDto;
 
     // Control de acceso: usuarios normales no pueden cambiar el estado
     if (status && !user.roles.includes(ValidRoles.admin)) {
@@ -197,6 +219,25 @@ export class AppointmentsService {
     }
 
     try {
+      // Actualiza la mascota si se proporciona una nueva (validando ownership)
+      if (petId) {
+        const pet = await this.petRepository.findOne({
+          where: {
+            id: petId,
+            owner: { id: user.id },
+            isActive: true
+          },
+        });
+
+        if (!pet) {
+          throw new NotFoundException(
+            'Mascota no encontrada o no pertenece al usuario autenticado'
+          );
+        }
+
+        appointment.pet = pet;
+      }
+
       // Actualiza el servicio si se proporciona uno nuevo
       if (serviceId) {
         const service = await this.servicesService.findOne(serviceId);
@@ -224,7 +265,7 @@ export class AppointmentsService {
       await this.appointmentRepository.save(appointment);
       return appointment;
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof ForbiddenException) {
+      if (error instanceof BadRequestException || error instanceof ForbiddenException || error instanceof NotFoundException) {
         throw error;
       }
       this.handleDBExceptions(error);

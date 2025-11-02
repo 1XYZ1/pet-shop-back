@@ -70,12 +70,12 @@ export class ProductsService {
 
   /**
    * Obtiene una lista paginada de productos con filtros opcionales
-   * @param paginationDto - Parámetros de paginación (limit, offset, category)
+   * @param paginationDto - Parámetros de paginación (limit, offset, species)
    * @returns Objeto con productos, total de registros y número de páginas
    */
   async findAll(paginationDto: PaginationDto) {
     // Destructuring con valores por defecto para evitar errores si no se envían parámetros
-    const { limit = 10, offset = 0, category } = paginationDto;
+    const { limit = 10, offset = 0, species } = paginationDto;
 
     // Consulta principal con paginación y relaciones
     const products = await this.productRepository.find({
@@ -87,13 +87,13 @@ export class ProductsService {
       order: {
         id: 'ASC', // Ordena por ID ascendente
       },
-      // Filtro condicional: si hay category, busca solo esa categoría
-      where: category ? { category } : {},
+      // Filtro condicional: si hay species, busca solo esa especie
+      where: species ? { species } : {},
     });
 
     // Cuenta total de productos (necesario para calcular páginas)
     const totalProducts = await this.productRepository.count({
-      where: category ? { category } : {},
+      where: species ? { species } : {},
     });
 
     return {
@@ -109,13 +109,13 @@ export class ProductsService {
 
   /**
    * Obtiene una lista paginada de productos con filtros avanzados
-   * Soporta búsqueda por texto, categoría, tallas y rango de precios
+   * Soporta búsqueda por texto, tipo de producto, especie, tallas y rango de precios
    * @param queryDto - Parámetros de filtrado y paginación avanzados
    * @returns Objeto con productos filtrados, total de registros y metadata de paginación
    */
   async findAllFiltered(queryDto: FindProductsQueryDto) {
     // Extrae los parámetros del DTO con valores por defecto
-    const { limit = 10, offset = 0, q, category, sizes, minPrice, maxPrice } = queryDto;
+    const { limit = 10, offset = 0, q, type, species, sizes, minPrice, maxPrice } = queryDto;
 
     // Crea un QueryBuilder para construir una consulta SQL dinámica y flexible
     const queryBuilder = this.productRepository
@@ -131,12 +131,17 @@ export class ProductsService {
       );
     }
 
-    // Filtro 2: Categoría (cats o dogs)
-    if (category) {
-      queryBuilder.andWhere('product.category = :category', { category });
+    // Filtro 2: Tipo de producto (alimento-seco, accesorios, juguetes, etc.)
+    if (type) {
+      queryBuilder.andWhere('product.type = :type', { type });
     }
 
-    // Filtro 3: Tallas (busca productos que tengan AL MENOS UNA de las tallas especificadas)
+    // Filtro 3: Especie (cats o dogs)
+    if (species) {
+      queryBuilder.andWhere('product.species = :species', { species });
+    }
+
+    // Filtro 4: Tallas (busca productos que tengan AL MENOS UNA de las tallas especificadas)
     if (sizes) {
       // Convierte el string "S,M,L" en array ["S", "M", "L"]
       // Convierte a mayúsculas para hacer la búsqueda case-insensitive (s -> S)
@@ -147,12 +152,12 @@ export class ProductsService {
       queryBuilder.andWhere('product.sizes && :sizes', { sizes: sizesArray });
     }
 
-    // Filtro 4: Precio mínimo
+    // Filtro 5: Precio mínimo
     if (minPrice !== undefined && minPrice !== null) {
       queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
     }
 
-    // Filtro 5: Precio máximo
+    // Filtro 6: Precio máximo
     if (maxPrice !== undefined && maxPrice !== null) {
       queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
     }

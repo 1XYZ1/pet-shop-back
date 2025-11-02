@@ -9,7 +9,7 @@ import {
   IsEnum,
   IsNumber,
 } from 'class-validator';
-import { ProductCategory } from '../../common/enums';
+import { ProductSpecies, ProductType } from '../../common/enums';
 
 /**
  * DTO para filtrar y paginar productos en el endpoint GET /api/products
@@ -67,21 +67,37 @@ export class FindProductsQueryDto {
   q?: string;
 
   /**
-   * Filtro por categoría del producto
+   * Filtro por tipo de producto
+   * Permite: alimento-seco, alimento-humedo, snacks, accesorios, juguetes, higiene
+   */
+  @ApiProperty({
+    description: 'Filtrar productos por tipo',
+    enum: ProductType,
+    example: ProductType.ALIMENTO_SECO,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(ProductType, {
+    message: 'El tipo debe ser uno de: alimento-seco, alimento-humedo, snacks, accesorios, juguetes, higiene',
+  })
+  type?: ProductType;
+
+  /**
+   * Filtro por especie de mascota
    * Permite: cats, dogs
    * Filtra productos específicos para gatos o perros
    */
   @ApiProperty({
-    description: 'Filtrar productos por categoría',
-    enum: ProductCategory,
-    example: ProductCategory.DOGS,
+    description: 'Filtrar productos por especie de mascota',
+    enum: ProductSpecies,
+    example: ProductSpecies.DOGS,
     required: false,
   })
   @IsOptional()
-  @IsEnum(ProductCategory, {
-    message: 'La categoría debe ser: cats o dogs',
+  @IsEnum(ProductSpecies, {
+    message: 'La especie debe ser: cats o dogs',
   })
-  category?: ProductCategory;
+  species?: ProductSpecies;
 
   /**
    * Filtro por tallas disponibles

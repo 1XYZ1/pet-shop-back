@@ -1,11 +1,13 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 
 import { PetsService } from './pets.service';
 import { PetsController } from './pets.controller';
 import { Pet } from './entities';
 
 import { AuthModule } from '../auth/auth.module';
+import { FilesModule } from '../files/files.module';
 import { MedicalRecordsModule } from '../medical-records/medical-records.module';
 import { GroomingRecordsModule } from '../grooming-records/grooming-records.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
@@ -37,7 +39,9 @@ import { AppointmentsModule } from '../appointments/appointments.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([Pet]),
+        ConfigModule,
         AuthModule,
+        FilesModule,
         forwardRef(() => MedicalRecordsModule),
         forwardRef(() => GroomingRecordsModule),
         forwardRef(() => AppointmentsModule),

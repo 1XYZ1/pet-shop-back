@@ -12,6 +12,8 @@ import { MedicalRecord } from '../medical-records/entities/medical-record.entity
 import { Vaccination } from '../medical-records/entities/vaccination.entity';
 import { GroomingRecord } from '../grooming-records/entities/grooming-record.entity';
 import { AppointmentPet } from '../appointments/entities/appointment-pet.entity';
+import { Cart } from '../cart/entities/cart.entity';
+import { CartItem } from '../cart/entities/cart-item.entity';
 import { PetSpecies, PetGender, PetTemperament, VisitType } from '../common/enums';
 
 /**
@@ -48,6 +50,12 @@ export class SeedService {
 
     @InjectRepository( AppointmentPet )
     private readonly appointmentPetRepository: Repository<AppointmentPet>,
+
+    @InjectRepository( Cart )
+    private readonly cartRepository: Repository<Cart>,
+
+    @InjectRepository( CartItem )
+    private readonly cartItemRepository: Repository<CartItem>,
   ) {}
 
   /**
@@ -90,8 +98,8 @@ export class SeedService {
     // Inserta registros de grooming para las mascotas
     await this.insertGroomingRecords( pets, adminUser );
 
-    // Inserta citas de ejemplo usando los servicios y usuarios creados
-    const appointments = await this.insertNewAppointments( services, users, adminUser );
+    // Inserta citas de ejemplo usando los servicios, usuarios y mascotas creados
+    const appointments = await this.insertNewAppointments( services, users, pets, adminUser );
 
     // Vincula mascotas a las citas creadas
     await this.linkPetsToAppointments( appointments, pets, services );
@@ -109,8 +117,10 @@ export class SeedService {
    * 5. MedicalRecords (depende de Pets y Users)
    * 6. Pets (depende de Users)
    * 7. Services (depende de Users)
-   * 8. Products (depende de Users)
-   * 9. Users (base)
+   * 8. CartItems (depende de Products y Carts)
+   * 9. Carts (depende de Users)
+   * 10. Products (depende de Users)
+   * 11. Users (base)
    */
   private async deleteTables() {
     // Eliminar AppointmentPet primero (tabla intermedia)
@@ -148,6 +158,18 @@ export class SeedService {
 
     // Eliminar servicios (depende de usuarios)
     await this.servicesService.deleteAllServices();
+
+    // Eliminar items del carrito (depende de productos y carritos)
+    await this.cartItemRepository.createQueryBuilder()
+      .delete()
+      .where({})
+      .execute();
+
+    // Eliminar carritos (depende de usuarios)
+    await this.cartRepository.createQueryBuilder()
+      .delete()
+      .where({})
+      .execute();
 
     // Eliminar productos (depende de usuarios)
     await this.productsService.deleteAllProducts();
@@ -216,25 +238,26 @@ export class SeedService {
    * Inserta citas de ejemplo en la base de datos
    * @param services - Array de servicios creados
    * @param users - Array de usuarios creados
+   * @param pets - Array de mascotas creadas
    * @param adminUser - Usuario administrador para actualizar estados
    * @returns Array de appointments creados
    */
-  private async insertNewAppointments( services: any[], users: User[], adminUser: User ): Promise<any[]> {
+  private async insertNewAppointments( services: any[], users: User[], pets: Pet[], adminUser: User ): Promise<any[]> {
     const appointmentsData = initialData.appointments;
     const createdAppointments = [];
 
     for (const appointmentData of appointmentsData) {
-      const { serviceIndex, customerIndex, ...appointmentInfo } = appointmentData;
+      const { serviceIndex, customerIndex, petIndex, ...appointmentInfo } = appointmentData;
 
-      // Obtiene el servicio y el cliente según los índices
+      // Obtiene el servicio, el cliente y la mascota según los índices
       const service = services[serviceIndex];
       const customer = users[customerIndex];
+      const pet = pets[petIndex];
 
       // Crea el DTO de appointment
       const appointmentDto = {
         date: appointmentInfo.date.toISOString(),
-        petName: appointmentInfo.petName,
-        petBreed: appointmentInfo.petBreed,
+        petId: pet.id,
         notes: appointmentInfo.notes,
         serviceId: service.id,
       };
