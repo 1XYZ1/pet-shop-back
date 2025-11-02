@@ -55,12 +55,11 @@ export class ServicesController {
 
   /**
    * Obtiene todos los servicios con paginación
-   * Accesible para usuarios autenticados
+   * Ruta pública - No requiere autenticación
    *
    * GET /api/services?limit=10&offset=0
    */
   @Get()
-  @Auth()
   @ApiResponse({
     status: 200,
     description: 'List of services retrieved successfully',
@@ -88,12 +87,11 @@ export class ServicesController {
 
   /**
    * Obtiene un servicio específico por ID o nombre
-   * Accesible para usuarios autenticados
+   * Ruta pública - No requiere autenticación
    *
    * GET /api/services/:term
    */
   @Get(':term')
-  @Auth()
   @ApiResponse({
     status: 200,
     description: 'Service retrieved successfully',
