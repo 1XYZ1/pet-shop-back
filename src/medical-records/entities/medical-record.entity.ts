@@ -91,6 +91,26 @@ export class MedicalRecord {
     notes?: string;
 
     /**
+     * Array de prescripciones médicas
+     * Medicamentos prescritos con sus dosis e instrucciones
+     * Ejemplo: ["Vitamina C - 1 tableta diaria", "Desparasitante - cada 3 meses"]
+     */
+    @Column('text', {
+        array: true,
+        default: []
+    })
+    prescriptions: string[];
+
+    /**
+     * Fecha de seguimiento programada
+     * Próxima cita recomendada para revisar la evolución del tratamiento
+     */
+    @Column('date', {
+        nullable: true
+    })
+    followUpDate?: Date;
+
+    /**
      * Peso de la mascota en el momento de la visita (kg)
      * Permite seguir la evolución del peso a lo largo del tiempo
      */

@@ -134,11 +134,10 @@ export class GroomingRecord {
     /**
      * Duración de la sesión en minutos
      * Útil para programación y estimación de tiempos
+     * Campo requerido según especificación API
      */
-    @Column('int', {
-        nullable: true
-    })
-    durationMinutes?: number;
+    @Column('int')
+    durationMinutes: number;
 
     /**
      * Costo del servicio de grooming

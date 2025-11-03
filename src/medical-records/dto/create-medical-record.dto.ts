@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+    IsArray,
     IsDate,
     IsEnum,
     IsNotEmpty,
@@ -100,6 +101,28 @@ export class CreateMedicalRecordDto {
     @IsOptional()
     @MaxLength(2000)
     notes?: string;
+
+    @ApiProperty({
+        description: 'Array de prescripciones médicas con dosis e instrucciones',
+        example: ['Vitamina C - 1 tableta diaria', 'Desparasitante - cada 3 meses'],
+        required: false,
+        type: [String]
+    })
+    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
+    prescriptions?: string[];
+
+    @ApiProperty({
+        description: 'Fecha de seguimiento programada (formato ISO 8601)',
+        example: '2024-02-15',
+        required: false,
+        type: String
+    })
+    @Type(() => Date)
+    @IsDate()
+    @IsOptional()
+    followUpDate?: Date;
 
     @ApiProperty({
         description: 'Peso de la mascota en la visita (kg)',

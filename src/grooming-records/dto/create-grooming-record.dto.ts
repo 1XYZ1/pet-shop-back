@@ -141,13 +141,12 @@ export class CreateGroomingRecordDto {
     @ApiProperty({
         description: 'Duración de la sesión en minutos',
         example: 90,
-        required: false,
         minimum: 1
     })
     @IsInt()
     @IsPositive()
-    @IsOptional()
-    durationMinutes?: number;
+    @IsNotEmpty()
+    durationMinutes: number;
 
     @ApiProperty({
         description: 'Costo del servicio de grooming',
