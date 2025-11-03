@@ -301,6 +301,7 @@ export class SeedService {
         temperament: PetTemperament.FRIENDLY,
         behaviorNotes: ['Le gusta nadar', 'Nervioso con otros perros', 'Obediente'],
         generalNotes: 'Muy activo, necesita ejercicio diario. Excelente con niños.',
+        profilePhoto: `${process.env.HOST_API}/files/pet/max-golden-retriever.jpg`,
         owner: users[1], // test1@google.com
       },
       {
@@ -315,6 +316,7 @@ export class SeedService {
         temperament: PetTemperament.CALM,
         behaviorNotes: ['Independiente', 'No le gustan las visitas', 'Prefiere espacios tranquilos'],
         generalNotes: 'Gata tranquila, perfecta para apartamento.',
+        profilePhoto: `${process.env.HOST_API}/files/pet/luna-siames.jpg`,
         owner: users[1], // test1@google.com (mismo dueño que Max)
       },
       {
@@ -328,6 +330,7 @@ export class SeedService {
         temperament: PetTemperament.FRIENDLY,
         behaviorNotes: ['Ronca mucho', 'Le gusta dormir', 'Sociable'],
         generalNotes: 'Perro tranquilo, ideal para espacios pequeños.',
+        profilePhoto: `${process.env.HOST_API}/files/pet/rocky-bulldog.jpg`,
         owner: users[2], // test2@google.com
       },
       {
@@ -412,6 +415,8 @@ export class SeedService {
         diagnosis: 'Salud óptima. Condición física excelente.',
         treatment: 'Ninguno necesario. Continuar con dieta actual.',
         notes: 'Perro en excelente estado. Peso ideal para su raza.',
+        prescriptions: ['Vitamina C - 1 tableta diaria por 30 días', 'Suplemento omega-3 - con comida, una vez al día'],
+        followUpDate: new Date('2026-10-15'),
         weightAtVisit: 32.5,
         temperature: 38.3,
         serviceCost: 35.00,
@@ -424,6 +429,8 @@ export class SeedService {
         reason: 'Revisión de piel - irritación en patas',
         diagnosis: 'Dermatitis alérgica leve',
         treatment: 'Crema tópica por 7 días. Evitar pastos recién cortados.',
+        prescriptions: ['Crema de hidrocortisona 1% - aplicar 2 veces al día en zonas afectadas', 'Antihistamínico Cetirizina 10mg - 1 tableta cada 12 horas por 7 días'],
+        followUpDate: new Date('2025-07-24'),
         weightAtVisit: 31.8,
         temperature: 38.5,
         serviceCost: 50.00,
@@ -438,6 +445,7 @@ export class SeedService {
         diagnosis: 'Estado de salud bueno',
         treatment: 'Reforzar dieta con taurina',
         notes: 'Gata en buen estado general. Recomendar juguetes interactivos.',
+        prescriptions: ['Suplemento de taurina - mezclar con comida húmeda diariamente'],
         weightAtVisit: 4.2,
         temperature: 38.7,
         serviceCost: 30.00,
@@ -452,6 +460,7 @@ export class SeedService {
         diagnosis: 'Problemas respiratorios típicos de la raza',
         treatment: 'Evitar ejercicio intenso en climas calurosos. Humidificador en casa.',
         notes: 'Propietario educado sobre cuidados especiales del Bulldog Francés.',
+        prescriptions: [],
         weightAtVisit: 12.0,
         temperature: 38.9,
         serviceCost: 45.00,
@@ -466,9 +475,89 @@ export class SeedService {
         diagnosis: 'Ansiedad por separación moderada',
         treatment: 'Remitido a entrenador canino. Considerar juguetes de enriquecimiento.',
         notes: 'Se recomendó programa de modificación de conducta.',
+        prescriptions: ['Adaptil (feromonas calmantes) - difusor en habitación principal', 'Suplemento calmante natural - 1 tableta cada 12 horas'],
+        followUpDate: new Date('2025-09-15'),
         weightAtVisit: 10.5,
         temperature: 38.4,
         serviceCost: 40.00,
+        veterinarian: adminUser,
+      },
+      // Registros para Michi (gato persa)
+      {
+        pet: pets[3], // Michi
+        visitDate: new Date('2025-10-01T10:30:00'),
+        visitType: VisitType.CHECKUP,
+        reason: 'Primer chequeo - gato joven',
+        diagnosis: 'Salud excelente. Desarrollo normal para su edad.',
+        treatment: 'Continuar con dieta premium para gatos persas.',
+        notes: 'Requiere cepillado diario debido a pelo largo. Sin problemas de salud.',
+        prescriptions: ['Pasta de malta - 2 veces por semana para prevenir bolas de pelo'],
+        weightAtVisit: 5.5,
+        temperature: 38.6,
+        serviceCost: 30.00,
+        veterinarian: adminUser,
+      },
+      // Registros para Coco (cacatúa)
+      {
+        pet: pets[5], // Coco
+        visitDate: new Date('2025-09-10T14:00:00'),
+        visitType: VisitType.CHECKUP,
+        reason: 'Chequeo anual aviar',
+        diagnosis: 'Ave en excelente estado. Plumaje brillante y saludable.',
+        treatment: 'Mantener dieta variada con frutas y semillas.',
+        notes: 'Pico y uñas en buen estado. Comportamiento social saludable.',
+        prescriptions: ['Suplemento vitamínico aviar - 3 gotas en agua diariamente', 'Calcio en polvo - espolvorear sobre frutas 2 veces por semana'],
+        followUpDate: new Date('2026-09-10'),
+        weightAtVisit: 0.85,
+        temperature: 41.2,
+        serviceCost: 45.00,
+        veterinarian: adminUser,
+      },
+      // Registros para Toby (conejo)
+      {
+        pet: pets[6], // Toby
+        visitDate: new Date('2025-10-25T11:00:00'),
+        visitType: VisitType.CHECKUP,
+        reason: 'Control rutinario - primer año',
+        diagnosis: 'Conejo saludable. Dientes en buen estado.',
+        treatment: 'Dieta rica en heno para mantener dientes sanos.',
+        notes: 'Peso adecuado para la raza. Comportamiento normal.',
+        prescriptions: ['Heno timothy ilimitado - base de la dieta', 'Verduras frescas - 1 taza diaria'],
+        weightAtVisit: 1.8,
+        temperature: 38.8,
+        serviceCost: 35.00,
+        veterinarian: adminUser,
+      },
+      // SURGERY - Max (operación de un quiste)
+      {
+        pet: pets[0], // Max
+        visitDate: new Date('2025-05-20T09:00:00'),
+        visitType: VisitType.SURGERY,
+        reason: 'Remoción de quiste sebáceo en lomo',
+        diagnosis: 'Quiste sebáceo benigno de 2cm en región lumbar',
+        treatment: 'Cirugía menor bajo anestesia local. Extracción completa del quiste.',
+        notes: 'Procedimiento exitoso. Muestra enviada a patología (resultado: benigno). Sutura con puntos absorbibles.',
+        prescriptions: ['Antibiótico Cefalexina 500mg - cada 12 horas por 10 días', 'Analgésico Tramadol 50mg - cada 8 horas por 5 días', 'Collar isabelino - usar por 10 días hasta retirar puntos'],
+        followUpDate: new Date('2025-06-03'),
+        weightAtVisit: 32.0,
+        temperature: 38.4,
+        serviceCost: 250.00,
+        veterinarian: adminUser,
+      },
+      // EMERGENCY - Rocky (crisis respiratoria)
+      {
+        pet: pets[2], // Rocky
+        visitDate: new Date('2025-10-28T22:30:00'),
+        visitType: VisitType.EMERGENCY,
+        reason: 'Crisis respiratoria aguda - dificultad severa para respirar',
+        diagnosis: 'Síndrome braquicefálico con obstrucción aguda de vías respiratorias',
+        treatment: 'Oxigenoterapia inmediata. Corticoides IV. Enfriamiento corporal.',
+        notes: 'EMERGENCIA NOCTURNA. Paciente llegó con cianosis leve. Estabilizado después de 2 horas. Se recomienda considerar cirugía correctiva de paladar blando.',
+        prescriptions: ['Prednisona 10mg - 1 tableta cada 12 horas por 5 días, luego reducir dosis', 'Reposo absoluto - evitar ejercicio y calor por 2 semanas'],
+        followUpDate: new Date('2025-11-04'),
+        weightAtVisit: 12.2,
+        temperature: 40.1,
+        serviceCost: 180.00,
         veterinarian: adminUser,
       },
     ];
