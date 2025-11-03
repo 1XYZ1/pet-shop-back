@@ -11,6 +11,9 @@ import { FilesModule } from '../files/files.module';
 import { MedicalRecordsModule } from '../medical-records/medical-records.module';
 import { GroomingRecordsModule } from '../grooming-records/grooming-records.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
+import { MedicalRecord, Vaccination } from '../medical-records/entities';
+import { GroomingRecord } from '../grooming-records/entities';
+import { Appointment } from '../appointments/entities';
 
 /**
  * Módulo de Mascotas
@@ -24,12 +27,19 @@ import { AppointmentsModule } from '../appointments/appointments.module';
  * Entidades:
  * - Pet: Perfil de mascotas con datos básicos, médicos y comportamiento
  *
+ * Repositorios inyectados:
+ * - Pet: Para operaciones CRUD de mascotas
+ * - MedicalRecord: Para consultar historial médico en complete-profile
+ * - Vaccination: Para consultar vacunas en complete-profile
+ * - GroomingRecord: Para consultar historial de grooming en complete-profile
+ * - Appointment: Para consultar citas en complete-profile
+ *
  * Dependencias:
  * - AuthModule: Para decoradores @Auth() y @GetUser()
- * - MedicalRecordsModule: Para historial médico en complete-profile
- * - GroomingRecordsModule: Para historial de grooming en complete-profile
- * - AppointmentsModule: Para appointments en complete-profile
- * - TypeOrmModule: Para repositorio de Pet
+ * - MedicalRecordsModule: Para acceder a entidades de registros médicos
+ * - GroomingRecordsModule: Para acceder a entidades de grooming
+ * - AppointmentsModule: Para acceder a entidades de appointments
+ * - TypeOrmModule: Para repositorios de todas las entidades
  *
  * Exporta:
  * - TypeOrmModule.forFeature([Pet]): Para que otros módulos puedan
@@ -38,7 +48,13 @@ import { AppointmentsModule } from '../appointments/appointments.module';
  */
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Pet]),
+        TypeOrmModule.forFeature([
+            Pet,
+            MedicalRecord,
+            Vaccination,
+            GroomingRecord,
+            Appointment,
+        ]),
         ConfigModule,
         AuthModule,
         FilesModule,

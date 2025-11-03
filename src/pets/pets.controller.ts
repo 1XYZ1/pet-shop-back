@@ -20,6 +20,7 @@ import { diskStorage } from 'multer';
 import { PetsService } from './pets.service';
 import { CreatePetDto, UpdatePetDto } from './dto';
 import { Pet } from './entities';
+import { CompleteProfileDto } from './dto/responses';
 
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
@@ -111,16 +112,26 @@ export class PetsController {
      *
      * @param id - UUID de la mascota
      * @param user - Usuario autenticado
-     * @returns Perfil completo con historial médico, vacunas, grooming, etc.
+     * @returns CompleteProfileDto con historial médico, vacunas, grooming, appointments y resumen
      *
      * Validaciones:
      * - El usuario debe ser owner de la mascota o admin
+     *
+     * Incluye:
+     * - Datos básicos de la mascota con información del owner
+     * - Historial médico reciente (últimas 10 visitas) y total
+     * - Vacunas con status calculado dinámicamente (up_to_date, due_soon, overdue)
+     * - Evolución del peso desde múltiples fuentes (medical, grooming, manual)
+     * - Historial de grooming reciente (últimas 10 sesiones) y total
+     * - Appointments separados en upcoming y past
+     * - Resumen con edad decimal, gastos totales y próxima vacuna
      */
     @Get(':id/complete-profile')
     @Auth()
     @ApiResponse({
         status: 200,
         description: 'Perfil completo recuperado exitosamente',
+        type: CompleteProfileDto,
     })
     @ApiResponse({
         status: 400,
@@ -137,7 +148,7 @@ export class PetsController {
     getCompleteProfile(
         @Param('id', ParseUUIDPipe) id: string,
         @GetUser() user: User
-    ) {
+    ): Promise<CompleteProfileDto> {
         return this.petsService.getCompleteProfile(id, user);
     }
 

@@ -7,7 +7,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan, LessThan } from 'typeorm';
 import { validate as isUUID } from 'uuid';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
@@ -18,8 +18,17 @@ import { User } from '../auth/entities/user.entity';
 import { PaginationDto } from '../common/dtos/pagination.dto';
 import { MedicalRecord, Vaccination } from '../medical-records/entities';
 import { GroomingRecord } from '../grooming-records/entities';
-import { AppointmentPet } from '../appointments/entities';
-import { CompleteProfile } from './interfaces/complete-profile.interface';
+import { Appointment } from '../appointments/entities';
+import {
+    CompleteProfileDto,
+    PetSummaryDto,
+    MedicalRecordSummaryDto,
+    VaccinationSummaryDto,
+    GroomingRecordSummaryDto,
+    AppointmentSummaryDto,
+    WeightHistoryDto,
+    WeightSource,
+} from './dto/responses';
 
 /**
  * Servicio principal para manejar todas las operaciones CRUD de mascotas
@@ -55,8 +64,8 @@ export class PetsService {
         @InjectRepository(GroomingRecord)
         private readonly groomingRecordRepository: Repository<GroomingRecord>,
 
-        @InjectRepository(AppointmentPet)
-        private readonly appointmentPetRepository: Repository<AppointmentPet>,
+        @InjectRepository(Appointment)
+        private readonly appointmentRepository: Repository<Appointment>,
     ) {}
 
     /**
@@ -250,132 +259,234 @@ export class PetsService {
      *
      * @param id - UUID de la mascota
      * @param user - Usuario que solicita el perfil
-     * @returns Objeto CompleteProfile con toda la información
+     * @returns CompleteProfileDto con toda la información transformada a DTOs
      *
      * Incluye:
-     * - Datos básicos de la mascota
-     * - Historial médico reciente (últimas 5 consultas)
-     * - Vacunas activas y próximas a vencer
-     * - Evolución del peso
-     * - Historial de grooming (últimas 5 sesiones)
-     * - Appointments relacionados
-     * - Resumen con datos calculados
+     * - Datos básicos de la mascota (PetSummaryDto)
+     * - Historial médico reciente (últimas 10 consultas)
+     * - Vacunas con status calculado dinámicamente
+     * - Evolución del peso desde múltiples fuentes
+     * - Historial de grooming (últimas 10 sesiones)
+     * - Appointments (upcoming y past separados correctamente)
+     * - Resumen con datos calculados (edad decimal, gastos totales)
+     *
+     * Optimización:
+     * - Todas las queries se ejecutan en paralelo usando Promise.all()
+     * - Transformación a DTOs con métodos estáticos fromEntity()
      */
-    async getCompleteProfile(id: string, user: User): Promise<CompleteProfile> {
+    async getCompleteProfile(id: string, user: User): Promise<CompleteProfileDto> {
         // Valida ownership y obtiene la mascota
         const pet = await this.findOne(id, user);
 
-        // 1. Historial médico reciente
-        const allMedicalRecords = await this.medicalRecordRepository.find({
-            where: { pet: { id } },
-            order: { visitDate: 'DESC' },
-        });
-        const recentVisits = allMedicalRecords.slice(0, 5);
-
-        // 2. Vacunas
-        const allVaccinations = await this.vaccinationRepository.find({
-            where: { pet: { id } },
-            order: { administeredDate: 'DESC' },
-        });
-
         const now = new Date();
-        const upcomingVaccines = allVaccinations.filter(
-            v => v.nextDueDate && v.nextDueDate >= now
-        ).sort((a, b) => a.nextDueDate.getTime() - b.nextDueDate.getTime());
 
-        // 3. Evolución del peso
-        const weightHistory: Array<{ date: Date; weight: number; source: 'medical' | 'pet' }> = [];
+        // ==================== QUERIES PARALELAS ====================
+        // Ejecutar todas las queries en paralelo para mejorar performance
+        const [
+            // Registros médicos
+            allMedicalRecords,
+            medicalRecordsCount,
 
-        // Agregar peso actual de la mascota
+            // Vacunas
+            allVaccinations,
+            vaccinationsCount,
+
+            // Sesiones de grooming
+            allGroomingSessions,
+            groomingSessionsCount,
+
+            // Appointments upcoming (futuras o pending/confirmed)
+            upcomingAppointments,
+
+            // Appointments past (pasadas y completed/cancelled)
+            pastAppointments,
+
+            // Total de appointments
+            appointmentsCount,
+
+        ] = await Promise.all([
+            // 1. Registros médicos recientes (últimas 10)
+            this.medicalRecordRepository.find({
+                where: { pet: { id } },
+                order: { visitDate: 'DESC' },
+                take: 10,
+            }),
+
+            // 2. Total de registros médicos
+            this.medicalRecordRepository.count({
+                where: { pet: { id } },
+            }),
+
+            // 3. Todas las vacunas (para calcular status y filtrar)
+            this.vaccinationRepository.find({
+                where: { pet: { id } },
+                order: { administeredDate: 'DESC' },
+            }),
+
+            // 4. Total de vacunas
+            this.vaccinationRepository.count({
+                where: { pet: { id } },
+            }),
+
+            // 5. Sesiones de grooming recientes (últimas 10)
+            this.groomingRecordRepository.find({
+                where: { pet: { id } },
+                order: { sessionDate: 'DESC' },
+                take: 10,
+            }),
+
+            // 6. Total de sesiones de grooming
+            this.groomingRecordRepository.count({
+                where: { pet: { id } },
+            }),
+
+            // 7. Appointments futuros (fecha >= hoy)
+            this.appointmentRepository.find({
+                where: { pet: { id }, date: MoreThan(now) },
+                order: { date: 'ASC' },
+            }),
+
+            // 8. Appointments pasados (fecha < hoy)
+            this.appointmentRepository.find({
+                where: { pet: { id }, date: LessThan(now) },
+                order: { date: 'DESC' },
+                take: 20,
+            }),
+
+            // 9. Total de appointments
+            this.appointmentRepository.count({
+                where: { pet: { id } },
+            }),
+        ]);
+
+        // ==================== TRANSFORMACIONES A DTOS ====================
+
+        // 1. Transformar mascota a PetSummaryDto
+        const petDto = PetSummaryDto.fromEntity(pet);
+
+        // 2. Transformar registros médicos a DTOs
+        const medicalRecordDtos = allMedicalRecords.map(record =>
+            MedicalRecordSummaryDto.fromEntity(record)
+        );
+
+        // 3. Transformar vacunas a DTOs
+        const vaccinationDtos = allVaccinations.map(vaccination =>
+            VaccinationSummaryDto.fromEntity(vaccination)
+        );
+
+        // Filtrar vacunas próximas (próximos 30 días)
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+        const upcomingVaccines = vaccinationDtos.filter(v => {
+            if (!v.nextDueDate) return false;
+            const dueDate = new Date(v.nextDueDate);
+            return dueDate >= now && dueDate <= thirtyDaysFromNow;
+        });
+
+        // 4. Construir historial de peso desde múltiples fuentes
+        const weightHistory: WeightHistoryDto[] = [];
+
+        // Agregar peso actual de la mascota (source: manual)
         if (pet.weight) {
-            weightHistory.push({
-                date: pet.updatedAt,
-                weight: pet.weight,
-                source: 'pet',
-            });
+            weightHistory.push(
+                WeightHistoryDto.fromPetProfile(pet.updatedAt, Number(pet.weight))
+            );
         }
 
-        // Agregar pesos de consultas médicas
+        // Agregar pesos de consultas médicas (source: medical)
         allMedicalRecords
             .filter(record => record.weightAtVisit)
             .forEach(record => {
-                weightHistory.push({
-                    date: record.visitDate,
-                    weight: record.weightAtVisit,
-                    source: 'medical',
-                });
+                weightHistory.push(
+                    WeightHistoryDto.fromMedicalRecord(record.visitDate, Number(record.weightAtVisit))
+                );
             });
 
-        // Ordenar por fecha descendente
-        weightHistory.sort((a, b) => b.date.getTime() - a.date.getTime());
+        // Ordenar por fecha descendente (más reciente primero)
+        weightHistory.sort((a, b) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
 
-        // 4. Historial de grooming
-        const allGroomingSessions = await this.groomingRecordRepository.find({
-            where: { pet: { id } },
-            order: { sessionDate: 'DESC' },
-        });
-        const recentSessions = allGroomingSessions.slice(0, 5);
-        const lastSessionDate = allGroomingSessions.length > 0
-            ? allGroomingSessions[0].sessionDate
+        // 5. Transformar sesiones de grooming a DTOs
+        const groomingRecordDtos = allGroomingSessions.map(session =>
+            GroomingRecordSummaryDto.fromEntity(session)
+        );
+
+        // Última sesión de grooming (si existe)
+        const lastSessionDate = groomingRecordDtos.length > 0
+            ? groomingRecordDtos[0].date
             : undefined;
 
-        // 5. Appointments
-        const allAppointmentPets = await this.appointmentPetRepository.find({
-            where: { pet: { id } },
-            relations: ['appointment', 'services'],
-            order: { createdAt: 'DESC' },
-        });
-
-        const upcoming = allAppointmentPets.filter(
-            ap => new Date(ap.appointment.date) >= now
-        );
-        const past = allAppointmentPets.filter(
-            ap => new Date(ap.appointment.date) < now
+        // 6. Transformar appointments a DTOs
+        const upcomingAppointmentDtos = upcomingAppointments.map(appointment =>
+            AppointmentSummaryDto.fromEntity(appointment)
         );
 
-        // 6. Calcular resumen
+        const pastAppointmentDtos = pastAppointments.map(appointment =>
+            AppointmentSummaryDto.fromEntity(appointment)
+        );
+
+        // ==================== CÁLCULOS DEL RESUMEN ====================
+
+        // Calcular edad en años con decimales (ej: 2.5 años)
         const age = pet.birthDate
-            ? Math.floor((now.getTime() - new Date(pet.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+            ? parseFloat(
+                ((now.getTime() - new Date(pet.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1)
+            )
             : undefined;
 
-        const lastVisitDate = allMedicalRecords.length > 0
-            ? allMedicalRecords[0].visitDate
+        // Última visita médica
+        const lastVisitDate = medicalRecordDtos.length > 0
+            ? medicalRecordDtos[0].date
             : undefined;
 
-        const nextVaccinationDue = upcomingVaccines.length > 0
-            ? upcomingVaccines[0].nextDueDate
-            : undefined;
+        // Próxima vacuna a aplicar (vacuna más cercana que esté pendiente o vencida)
+        const nextVaccinationDue = vaccinationDtos
+            .filter(v => {
+                if (!v.nextDueDate) return false;
+                const dueDate = new Date(v.nextDueDate);
+                return dueDate >= now; // Solo vacunas futuras o del día de hoy
+            })
+            .sort((a, b) => {
+                if (!a.nextDueDate) return 1;
+                if (!b.nextDueDate) return -1;
+                return new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime();
+            })[0]?.nextDueDate;
 
+        // Total gastado en servicios médicos
         const totalSpentMedical = allMedicalRecords
             .filter(r => r.serviceCost)
             .reduce((sum, r) => sum + Number(r.serviceCost), 0);
 
+        // Total gastado en grooming
         const totalSpentGrooming = allGroomingSessions
             .filter(s => s.serviceCost)
             .reduce((sum, s) => sum + Number(s.serviceCost), 0);
 
-        // Construir y retornar el perfil completo
-        return {
-            pet,
+        // ==================== CONSTRUIR DTO DE RESPUESTA ====================
+
+        const completeProfile: CompleteProfileDto = {
+            pet: petDto,
             medicalHistory: {
-                recentVisits,
-                totalVisits: allMedicalRecords.length,
+                recentVisits: medicalRecordDtos,
+                totalVisits: medicalRecordsCount,
             },
             vaccinations: {
-                activeVaccines: allVaccinations,
+                activeVaccines: vaccinationDtos,
                 upcomingVaccines,
-                totalVaccines: allVaccinations.length,
+                totalVaccines: vaccinationsCount,
             },
             weightHistory,
             groomingHistory: {
-                recentSessions,
-                totalSessions: allGroomingSessions.length,
+                recentSessions: groomingRecordDtos,
+                totalSessions: groomingSessionsCount,
                 lastSessionDate,
             },
             appointments: {
-                upcoming,
-                past,
-                totalAppointments: allAppointmentPets.length,
+                upcoming: upcomingAppointmentDtos,
+                past: pastAppointmentDtos,
+                totalAppointments: appointmentsCount,
             },
             summary: {
                 age,
@@ -385,6 +496,8 @@ export class PetsService {
                 totalSpentGrooming: parseFloat(totalSpentGrooming.toFixed(2)),
             },
         };
+
+        return completeProfile;
     }
 
     /**

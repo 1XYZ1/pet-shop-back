@@ -65,7 +65,7 @@ export class Pet {
      * Fecha de nacimiento de la mascota
      * Permite calcular edad y programar chequeos preventivos
      */
-    @Column('date', {
+    @Column('timestamp', {
         nullable: true
     })
     birthDate?: Date;
