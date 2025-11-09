@@ -11,10 +11,6 @@ import { VisitType } from '../../../common/enums';
  * Uso:
  * - Parte de la respuesta del endpoint GET /api/pets/:id/complete-profile
  * - Transformado desde la entidad MedicalRecord usando fromEntity()
- *
- * Nota:
- * - Los campos que no existen en la entidad MedicalRecord (veterinarianName, clinicName, followUpDate)
- *   se manejan como undefined ya que no están presentes en el modelo actual
  */
 export class MedicalRecordSummaryDto {
 
@@ -29,6 +25,13 @@ export class MedicalRecordSummaryDto {
         description: 'Fecha de la visita médica en formato ISO 8601',
     })
     date: string;
+
+    @ApiProperty({
+        example: 'consultation',
+        description: 'Tipo de visita médica',
+        enum: VisitType,
+    })
+    visitType: VisitType;
 
     @ApiProperty({
         example: 'Vómito y diarrea desde hace 2 días',
@@ -99,6 +102,7 @@ export class MedicalRecordSummaryDto {
      * Transformaciones aplicadas:
      * - Fechas convertidas a formato ISO 8601
      * - visitDate mapeado a date
+     * - visitType incluido
      * - serviceCost mapeado a cost
      * - veterinarian.fullName mapeado a vetName
      * - Valores null/undefined manejados correctamente
@@ -111,6 +115,7 @@ export class MedicalRecordSummaryDto {
         dto.date = record.visitDate instanceof Date
             ? record.visitDate.toISOString()
             : new Date(record.visitDate).toISOString();
+        dto.visitType = record.visitType;
         dto.reason = record.reason;
         dto.diagnosis = record.diagnosis;
         dto.treatment = record.treatment;

@@ -2,6 +2,24 @@ import * as bcrypt from 'bcrypt';
 import { ProductSpecies, ProductType, ServiceType, AppointmentStatus } from '../../common/enums';
 
 /**
+ * Funciones helper para generar fechas dinámicamente
+ * Actualizado para generar fechas futuras dinámicamente
+ */
+const generateFutureDate = (daysFromNow: number, hours: number = 10, minutes: number = 0): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
+const generatePastDate = (daysAgo: number, hours: number = 10, minutes: number = 0): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
+/**
  * Interface para productos en el seed
  */
 interface SeedProduct {
@@ -584,7 +602,7 @@ export const initialData: SeedData = {
 
   appointments: [
     {
-      date: new Date('2025-11-05T10:00:00.000Z'),
+      date: generateFutureDate(2, 10, 0), // 2 días en el futuro a las 10:00
       status: AppointmentStatus.CONFIRMED,
       notes: 'Primera vez que viene Max, es un poco nervioso con el agua',
       petIndex: 0, // Max - Golden Retriever
@@ -592,7 +610,7 @@ export const initialData: SeedData = {
       customerIndex: 1, // owner de Max
     },
     {
-      date: new Date('2025-11-06T14:30:00.000Z'),
+      date: generateFutureDate(3, 14, 30), // 3 días en el futuro a las 14:30
       status: AppointmentStatus.PENDING,
       notes: 'Luna necesita corte de uñas urgente',
       petIndex: 1, // Luna - Siamés
@@ -600,7 +618,7 @@ export const initialData: SeedData = {
       customerIndex: 1, // owner de Luna
     },
     {
-      date: new Date('2025-11-07T09:00:00.000Z'),
+      date: generateFutureDate(4, 9, 0), // 4 días en el futuro a las 9:00
       status: AppointmentStatus.CONFIRMED,
       notes: 'Vacunación anual de Rocky',
       petIndex: 2, // Rocky - Bulldog Francés
@@ -608,7 +626,7 @@ export const initialData: SeedData = {
       customerIndex: 2, // owner de Rocky
     },
     {
-      date: new Date('2025-11-08T16:00:00.000Z'),
+      date: generateFutureDate(5, 16, 0), // 5 días en el futuro a las 16:00
       status: AppointmentStatus.PENDING,
       notes: 'Michi necesita revisión de su pelaje',
       petIndex: 3, // Michi - Persa
@@ -616,7 +634,7 @@ export const initialData: SeedData = {
       customerIndex: 3, // owner de Michi
     },
     {
-      date: new Date('2025-11-10T11:00:00.000Z'),
+      date: generateFutureDate(7, 11, 0), // 7 días en el futuro a las 11:00
       status: AppointmentStatus.CONFIRMED,
       notes: 'Bella necesita tratamiento para ansiedad',
       petIndex: 4, // Bella - Beagle
@@ -624,7 +642,7 @@ export const initialData: SeedData = {
       customerIndex: 4, // owner de Bella
     },
     {
-      date: new Date('2025-11-12T10:00:00.000Z'),
+      date: generatePastDate(2, 10, 0), // 2 días en el pasado a las 10:00 (para tener una cita COMPLETED)
       status: AppointmentStatus.COMPLETED,
       notes: 'Chequeo general de Coco, todo salió bien',
       petIndex: 5, // Coco - Cacatúa
@@ -632,7 +650,7 @@ export const initialData: SeedData = {
       customerIndex: 5, // owner de Coco
     },
     {
-      date: new Date('2025-11-13T15:00:00.000Z'),
+      date: generateFutureDate(10, 15, 0), // 10 días en el futuro a las 15:00
       status: AppointmentStatus.CANCELLED,
       notes: 'Cliente canceló por viaje',
       petIndex: 6, // Toby - Mini Lop

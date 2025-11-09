@@ -10,11 +10,6 @@ import { GroomingRecord } from '../../../grooming-records/entities';
  * Uso:
  * - Parte de la respuesta del endpoint GET /api/pets/:id/complete-profile
  * - Transformado desde la entidad GroomingRecord usando fromEntity()
- *
- * Nota:
- * - Los campos que no existen en la entidad GroomingRecord (groomerName, salonName,
- *   productsCost, nextSessionDate) se manejan como undefined ya que no están presentes
- *   en el modelo actual o se calculan de manera diferente
  */
 export class GroomingRecordSummaryDto {
 
@@ -49,6 +44,13 @@ export class GroomingRecordSummaryDto {
         required: false,
     })
     cost?: number;
+
+    @ApiProperty({
+        example: 90,
+        description: 'Duración de la sesión en minutos',
+        required: false,
+    })
+    durationMinutes?: number;
 
     @ApiProperty({
         example: 'María López',
@@ -87,6 +89,7 @@ export class GroomingRecordSummaryDto {
      * - servicesPerformed (array) convertido a serviceType (string)
      * - observations y recommendations consolidadas en notes
      * - serviceCost mapeado a cost
+     * - durationMinutes incluido
      * - groomer.fullName mapeado a groomerName
      * - Valores null/undefined manejados correctamente
      */
@@ -112,6 +115,7 @@ export class GroomingRecordSummaryDto {
         dto.notes = noteParts.length > 0 ? noteParts.join('. ') : undefined;
 
         dto.cost = record.serviceCost ? Number(record.serviceCost) : undefined;
+        dto.durationMinutes = record.durationMinutes;
         dto.createdAt = record.createdAt instanceof Date
             ? record.createdAt.toISOString()
             : new Date(record.createdAt).toISOString();
