@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { LoginUserDto, CreateUserDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { handleDatabaseException } from '../common/helpers';
 
 
 @Injectable()
@@ -90,16 +91,10 @@ export class AuthService {
   }
 
   private handleDBErrors( error: any ): never {
-
-    // Prevenir enumeración de usuarios: no revelar si el email ya existe
-    if ( error.code === '23505' )
-      throw new BadRequestException('No se pudo crear la cuenta. Por favor, intenta con otros datos.');
-
-    // Logging seguro: NO loggear el objeto completo que podría contener contraseñas u otros datos sensibles
-    this.logger.error(`Database error during user creation: ${error.message}`);
-
-    throw new InternalServerErrorException('Please check server logs');
-
+    // Prevenir enumeración de usuarios: usar mensaje genérico para constraint único
+    handleDatabaseException(error, this.logger, {
+      uniqueViolation: 'No se pudo crear la cuenta. Por favor, intenta con otros datos.',
+    });
   }
 
 

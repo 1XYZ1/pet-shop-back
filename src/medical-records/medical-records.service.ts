@@ -19,6 +19,7 @@ import {
 import { MedicalRecord, Vaccination } from './entities';
 import { Pet } from '../pets/entities';
 import { User } from '../auth/entities/user.entity';
+import { handleDatabaseException, validatePetOwnership } from '../../common/helpers';
 
 /**
  * Servicio de Registros Médicos Veterinarios
@@ -361,6 +362,7 @@ export class MedicalRecordsService {
 
     /**
      * Valida que el usuario sea owner de la mascota o admin
+     * Utiliza helper compartido con mensaje personalizado
      *
      * @param pet - Mascota a validar
      * @param user - Usuario que intenta acceder
@@ -368,31 +370,17 @@ export class MedicalRecordsService {
      * @throws ForbiddenException si no tiene permiso
      */
     private validatePetOwnership(pet: Pet, user: User): void {
-        const isOwner = pet.owner.id === user.id;
-        const isAdmin = user.roles.includes('admin');
-
-        if (!isOwner && !isAdmin) {
-            throw new ForbiddenException(
-                'No tienes permiso para acceder a los registros de esta mascota'
-            );
-        }
+        validatePetOwnership(pet, user, 'No tienes permiso para acceder a los registros de esta mascota');
     }
 
     /**
      * Maneja errores de base de datos
+     * Utiliza helper compartido para consistencia
      *
      * @param error - Error capturado
      */
     private handleDBExceptions(error: any): never {
-        if (error.code === '23505') {
-            throw new BadRequestException(error.detail);
-        }
-
-        this.logger.error(error);
-
-        throw new InternalServerErrorException(
-            'Error inesperado, revise los logs del servidor'
-        );
+        handleDatabaseException(error, this.logger);
     }
 
     /**
