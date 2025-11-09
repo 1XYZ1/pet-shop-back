@@ -16,6 +16,13 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Yarn Berry (pnp mode)
+.yarn/
+.pnp
+.pnp.cjs
+.pnp.loader.mjs
+yarn.lock
+
 # OS
 .DS_Store
 
