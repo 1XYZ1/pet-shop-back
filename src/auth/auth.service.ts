@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -8,10 +8,13 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { LoginUserDto, CreateUserDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { handleDatabaseException } from '../common/helpers';
 
 
 @Injectable()
 export class AuthService {
+
+  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     @InjectRepository(User)
@@ -88,15 +91,10 @@ export class AuthService {
   }
 
   private handleDBErrors( error: any ): never {
-
-
-    if ( error.code === '23505' ) 
-      throw new BadRequestException( error.detail );
-
-    console.log(error)
-
-    throw new InternalServerErrorException('Please check server logs');
-
+    // Prevenir enumeración de usuarios: usar mensaje genérico para constraint único
+    handleDatabaseException(error, this.logger, {
+      uniqueViolation: 'No se pudo crear la cuenta. Por favor, intenta con otros datos.',
+    });
   }
 
 

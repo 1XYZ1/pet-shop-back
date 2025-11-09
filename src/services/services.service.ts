@@ -13,6 +13,7 @@ import { CreateServiceDto, UpdateServiceDto } from './dto';
 import { Service } from './entities';
 import { User } from '../auth/entities/user.entity';
 import { PaginationDto } from '../common/dtos/pagination.dto';
+import { handleDatabaseException } from '../common/helpers';
 
 /**
  * Servicio principal para manejar todas las operaciones CRUD de servicios
@@ -160,20 +161,11 @@ export class ServicesService {
 
   /**
    * Maneja errores específicos de la base de datos de forma centralizada
+   * Utiliza helper compartido para consistencia
    * @param error - Error capturado de TypeORM
    */
   private handleDBExceptions(error: any): never {
-    // Error 23505: violación de constraint único (ej: nombre duplicado)
-    if (error.code === '23505') {
-      throw new BadRequestException(error.detail);
-    }
-
-    // Registra el error para debugging
-    this.logger.error(error);
-    // Lanza error genérico para no exponer detalles internos
-    throw new InternalServerErrorException(
-      'Unexpected error, check server logs',
-    );
+    handleDatabaseException(error, this.logger);
   }
 
   /**

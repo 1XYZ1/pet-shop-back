@@ -14,6 +14,7 @@ import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { validate as isUUID } from 'uuid';
 import { ProductImage, Product } from './entities';
 import { User } from '../auth/entities/user.entity';
+import { handleDatabaseException } from '../common/helpers';
 
 /**
  * Servicio principal para manejar todas las operaciones CRUD de productos
@@ -302,19 +303,11 @@ export class ProductsService {
 
   /**
    * Maneja errores específicos de la base de datos de forma centralizada
+   * Utiliza helper compartido para mantener consistencia en toda la aplicación
    * @param error - Error capturado de TypeORM
    */
   private handleDBExceptions(error: any) {
-    // Error 23505: violación de constraint único (ej: título duplicado)
-    if (error.code === '23505') throw new BadRequestException(error.detail);
-
-    // Registra el error para debugging
-    this.logger.error(error);
-    // console.log(error)
-    // Lanza error genérico para no exponer detalles internos
-    throw new InternalServerErrorException(
-      'Unexpected error, check server logs',
-    );
+    handleDatabaseException(error, this.logger);
   }
 
   /**

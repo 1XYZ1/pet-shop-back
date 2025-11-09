@@ -29,6 +29,7 @@ import {
     WeightHistoryDto,
     WeightSource,
 } from './dto/responses';
+import { handleDatabaseException, validatePetOwnership } from '../common/helpers';
 
 /**
  * Servicio principal para manejar todas las operaciones CRUD de mascotas
@@ -502,52 +503,27 @@ export class PetsService {
 
     /**
      * Valida que el usuario tenga permiso para acceder/modificar una mascota
+     * Utiliza helper compartido de ownership-validation
      *
      * @param pet - Mascota a validar
      * @param user - Usuario que intenta acceder
      *
      * @throws ForbiddenException si el usuario no es owner ni admin
-     *
-     * Lógica:
-     * - Si el usuario es admin: siempre tiene acceso
-     * - Si el usuario es el owner: tiene acceso
-     * - En cualquier otro caso: acceso denegado
      */
     private validateOwnership(pet: Pet, user: User): void {
-        const isOwner = pet.owner.id === user.id;
-        const isAdmin = user.roles.includes('admin');
-
-        if (!isOwner && !isAdmin) {
-            throw new ForbiddenException(
-                'No tienes permiso para acceder a esta mascota'
-            );
-        }
+        validatePetOwnership(pet, user);
     }
 
     /**
      * Maneja errores específicos de la base de datos de forma centralizada
+     * Utiliza helper compartido con mensaje personalizado para microchip
      *
      * @param error - Error capturado de TypeORM
-     *
-     * Casos manejados:
-     * - 23505: Violación de constraint único (ej: microchipNumber duplicado)
-     * - Otros: Error genérico sin exponer detalles internos
      */
     private handleDBExceptions(error: any): never {
-        // Error de constraint único (ej: microchip duplicado)
-        if (error.code === '23505') {
-            throw new BadRequestException(
-                'Ya existe una mascota con ese número de microchip'
-            );
-        }
-
-        // Registra el error para debugging
-        this.logger.error(error);
-
-        // Lanza error genérico
-        throw new InternalServerErrorException(
-            'Error inesperado, revise los logs del servidor'
-        );
+        handleDatabaseException(error, this.logger, {
+            uniqueViolation: 'Ya existe una mascota con ese número de microchip',
+        });
     }
 
     /**

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, UseGuards, Req, Headers, SetMetadata } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { IncomingHttpHeaders } from 'http';
 
@@ -20,11 +21,15 @@ export class AuthController {
 
 
 
+  // Rate Limiting estricto en registro: máximo 5 intentos cada 5 minutos para prevenir spam y creación masiva de cuentas
+  @Throttle({ default: { limit: 5, ttl: 300000 } })  // 5 requests / 5 minutos
   @Post('register')
   createUser(@Body() createUserDto: CreateUserDto ) {
     return this.authService.create( createUserDto );
   }
 
+  // Rate Limiting estricto en login: máximo 5 intentos cada 5 minutos para prevenir ataques de fuerza bruta
+  @Throttle({ default: { limit: 5, ttl: 300000 } })  // 5 requests / 5 minutos
   @Post('login')
   loginUser(@Body() loginUserDto: LoginUserDto ) {
     return this.authService.login( loginUserDto );

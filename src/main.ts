@@ -3,6 +3,7 @@ import { ValidationPipe, Logger, ClassSerializerInterceptor } from '@nestjs/comm
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,7 +11,12 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  app.enableCors();
+  // CORS restrictivo: Solo permitir orígenes específicos desde variable de entorno
+  app.enableCors({
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -19,6 +25,9 @@ async function bootstrap() {
       transform: true, // Habilita la transformación automática de tipos en DTOs
     }),
   );
+
+  // Registra el filtro global de excepciones para estandarizar respuestas de error
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 

@@ -40,10 +40,10 @@ export class CreatePetDto {
         minLength: 1,
         maxLength: 100
     })
-    @IsString()
-    @IsNotEmpty()
-    @MinLength(1)
-    @MaxLength(100)
+    @IsString({ message: 'El nombre debe ser un texto válido' })
+    @IsNotEmpty({ message: 'El nombre es requerido' })
+    @MinLength(1, { message: 'El nombre no puede estar vacío' })
+    @MaxLength(100, { message: 'El nombre no puede exceder 100 caracteres' })
     name: string;
 
     @ApiProperty({
@@ -51,8 +51,8 @@ export class CreatePetDto {
         enum: PetSpecies,
         example: PetSpecies.DOG
     })
-    @IsEnum(PetSpecies)
-    @IsNotEmpty()
+    @IsEnum(PetSpecies, { message: 'La especie seleccionada no es válida' })
+    @IsNotEmpty({ message: 'La especie es requerida' })
     species: PetSpecies;
 
     @ApiProperty({
@@ -73,7 +73,7 @@ export class CreatePetDto {
         type: String
     })
     @Type(() => Date)
-    @IsDate()
+    @IsDate({ message: 'La fecha de nacimiento debe ser una fecha válida' })
     @IsOptional()
     @MaxDate(new Date(), {
         message: 'La fecha de nacimiento no puede ser en el futuro'
@@ -86,7 +86,7 @@ export class CreatePetDto {
         example: PetGender.MALE,
         required: false
     })
-    @IsEnum(PetGender)
+    @IsEnum(PetGender, { message: 'El género seleccionado no es válido' })
     @IsOptional()
     gender?: PetGender;
 
@@ -107,8 +107,8 @@ export class CreatePetDto {
         required: false,
         minimum: 0.01
     })
-    @IsNumber()
-    @IsPositive()
+    @IsNumber({}, { message: 'El peso debe ser un número válido' })
+    @IsPositive({ message: 'El peso debe ser mayor a cero' })
     @IsOptional()
     weight?: number;
 
