@@ -14,6 +14,7 @@ import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 import { ProductsService } from '../products/products.service';
 import { SyncResult } from './interfaces/sync-result.interface';
+import { handleDatabaseException } from '../common/helpers';
 
 /**
  * Service for managing shopping cart operations
@@ -333,25 +334,14 @@ export class CartService {
 
   /**
    * Handle database exceptions consistently
+   * Utiliza helper compartido con mensajes personalizados para el carrito
    * @param error - Error from database operation
    * @private
    */
   private handleDBExceptions(error: any): never {
-    // Unique constraint violation (duplicate cart item)
-    if (error.code === '23505') {
-      throw new BadRequestException(
-        'This item with the same size already exists in your cart',
-      );
-    }
-
-    // Foreign key violation
-    if (error.code === '23503') {
-      throw new BadRequestException('Invalid product or cart reference');
-    }
-
-    this.logger.error(error);
-    throw new InternalServerErrorException(
-      'Unexpected error occurred. Please try again later.',
-    );
+    handleDatabaseException(error, this.logger, {
+      uniqueViolation: 'This item with the same size already exists in your cart',
+      foreignKeyViolation: 'Invalid product or cart reference',
+    });
   }
 }
