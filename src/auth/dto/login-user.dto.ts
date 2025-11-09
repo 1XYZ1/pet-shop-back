@@ -9,13 +9,17 @@ import {
 
 export class LoginUserDto {
 
-    @IsString()
-    @IsEmail()
+    @IsString({ message: 'El correo debe ser un texto válido' })
+    @IsEmail({}, { message: 'Ingresa un correo electrónico válido' })
     email: string;
 
-    @IsString()
-    @MinLength(PASSWORD_MIN_LENGTH)
-    @MaxLength(PASSWORD_MAX_LENGTH)
+    @IsString({ message: 'La contraseña debe ser un texto válido' })
+    @MinLength(PASSWORD_MIN_LENGTH, {
+        message: `La contraseña debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres`
+    })
+    @MaxLength(PASSWORD_MAX_LENGTH, {
+        message: `La contraseña no puede exceder ${PASSWORD_MAX_LENGTH} caracteres`
+    })
     @Matches(PASSWORD_REGEX, {
         message: PASSWORD_VALIDATION_MESSAGE
     })

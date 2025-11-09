@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -22,6 +22,8 @@ import { PetSpecies, PetGender, PetTemperament, VisitType } from '../common/enum
  */
 @Injectable()
 export class SeedService {
+  // Logger para tracking del proceso de seeding
+  private readonly logger = new Logger('SeedService');
 
   constructor(
     // Servicio de productos para insertar productos de ejemplo
@@ -73,37 +75,50 @@ export class SeedService {
    * @returns Mensaje de confirmación
    */
   async runSeed() {
+    this.logger.log('Iniciando proceso de seed de base de datos...');
+
     // Elimina todos los datos existentes
+    this.logger.log('Eliminando datos existentes...');
     await this.deleteTables();
 
     // Inserta usuarios y obtiene el usuario administrador
+    this.logger.log('Insertando usuarios...');
     const users = await this.insertUsers();
     const adminUser = users[0];
 
     // Inserta productos con el usuario administrador
+    this.logger.log('Insertando productos...');
     await this.insertNewProducts( adminUser );
 
     // Inserta servicios con el usuario administrador
+    this.logger.log('Insertando servicios...');
     const services = await this.insertNewServices( adminUser );
 
     // Inserta mascotas asociadas a usuarios
+    this.logger.log('Insertando mascotas...');
     const pets = await this.insertPets( users );
 
     // Inserta registros médicos para las mascotas
+    this.logger.log('Insertando registros médicos...');
     await this.insertMedicalRecords( pets, adminUser );
 
     // Inserta vacunas para las mascotas
+    this.logger.log('Insertando vacunaciones...');
     await this.insertVaccinations( pets, adminUser );
 
     // Inserta registros de grooming para las mascotas
+    this.logger.log('Insertando registros de grooming...');
     await this.insertGroomingRecords( pets, adminUser );
 
     // Inserta citas de ejemplo usando los servicios, usuarios y mascotas creados
+    this.logger.log('Insertando citas...');
     const appointments = await this.insertNewAppointments( services, users, pets, adminUser );
 
     // Vincula mascotas a las citas creadas
+    this.logger.log('Vinculando mascotas a citas...');
     await this.linkPetsToAppointments( appointments, pets, services );
 
+    this.logger.log('SEED COMPLETADO - Base de datos poblada exitosamente');
     return 'SEED EXECUTED - Database populated successfully with pets system';
   }
 

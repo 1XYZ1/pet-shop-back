@@ -20,8 +20,8 @@ export class CreateServiceDto {
     example: 'Peluquería Canina Básica',
     minLength: 3,
   })
-  @IsString()
-  @MinLength(3)
+  @IsString({ message: 'El nombre debe ser un texto válido' })
+  @MinLength(3, { message: 'El nombre debe tener al menos 3 caracteres' })
   name: string;
 
   @ApiProperty({
@@ -29,24 +29,24 @@ export class CreateServiceDto {
     example: 'Servicio de peluquería básica que incluye baño, secado y corte de uñas',
     minLength: 10,
   })
-  @IsString()
-  @MinLength(10)
+  @IsString({ message: 'La descripción debe ser un texto válido' })
+  @MinLength(10, { message: 'La descripción debe tener al menos 10 caracteres' })
   description: string;
 
   @ApiProperty({
     description: 'Service price in dollars',
     example: 35.00,
   })
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({}, { message: 'El precio debe ser un número válido' })
+  @IsPositive({ message: 'El precio debe ser mayor a cero' })
   price: number;
 
   @ApiProperty({
     description: 'Estimated duration in minutes',
     example: 90,
   })
-  @IsInt()
-  @IsPositive()
+  @IsInt({ message: 'La duración debe ser un número entero' })
+  @IsPositive({ message: 'La duración debe ser mayor a cero' })
   durationMinutes: number;
 
   @ApiProperty({
@@ -54,7 +54,7 @@ export class CreateServiceDto {
     enum: ServiceType,
     example: ServiceType.GROOMING,
   })
-  @IsEnum(ServiceType)
+  @IsEnum(ServiceType, { message: 'El tipo de servicio no es válido' })
   type: ServiceType;
 
   @ApiProperty({
