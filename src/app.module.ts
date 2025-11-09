@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 import { ProductsModule } from './products/products.module';
 import { CommonModule } from './common/common.module';
@@ -53,6 +55,13 @@ import { GroomingRecordsModule } from './grooming-records/grooming-records.modul
       synchronize: true,
     }),
 
+    // Rate Limiting: Protección contra ataques de fuerza bruta y abuso de endpoints
+    ThrottlerModule.forRoot([{
+      name: 'default',
+      ttl: 60000,  // 60 segundos (1 minuto)
+      limit: 100,  // Máximo 100 requests por minuto por IP
+    }]),
+
     ProductsModule,
 
     CommonModule,
@@ -77,6 +86,13 @@ import { GroomingRecordsModule } from './grooming-records/grooming-records.modul
 
     GroomingRecordsModule,
 
+  ],
+  providers: [
+    // Aplicar ThrottlerGuard globalmente a todos los endpoints
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

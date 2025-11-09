@@ -10,7 +10,12 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  app.enableCors();
+  // CORS restrictivo: Solo permitir orígenes específicos desde variable de entorno
+  app.enableCors({
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
