@@ -19,7 +19,7 @@ import {
 import { MedicalRecord, Vaccination } from './entities';
 import { Pet } from '../pets/entities';
 import { User } from '../auth/entities/user.entity';
-import { handleDatabaseException, validatePetOwnership } from '../../common/helpers';
+import { handleDatabaseException, validatePetOwnership } from '../common/helpers';
 
 /**
  * Servicio de Registros Médicos Veterinarios
@@ -379,7 +379,7 @@ export class MedicalRecordsService {
      *
      * @param error - Error capturado
      */
-    private handleDBExceptions(error: any): never {
+    private handleDBExceptions(error: any): void {
         handleDatabaseException(error, this.logger);
     }
 
