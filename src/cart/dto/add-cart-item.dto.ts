@@ -6,7 +6,7 @@ export class AddCartItemDto {
     example: 'cd533345-f1f3-48c9-a62e-7dc2da50c8f8',
     description: 'Product ID to add to cart',
   })
-  @IsUUID('4', { message: 'Product ID must be a valid UUID' })
+  @IsUUID('4', { message: 'El ID de producto debe ser un UUID válido' })
   productId: string;
 
   @ApiProperty({
@@ -14,14 +14,14 @@ export class AddCartItemDto {
     description: 'Quantity to add',
     minimum: 1,
   })
-  @IsInt({ message: 'Quantity must be an integer' })
-  @Min(1, { message: 'Quantity must be at least 1' })
+  @IsInt({ message: 'La cantidad debe ser un número entero' })
+  @Min(1, { message: 'La cantidad debe ser al menos 1' })
   quantity: number;
 
   @ApiProperty({
     example: 'XL',
     description: 'Product size',
   })
-  @IsString({ message: 'Size must be a string' })
+  @IsString({ message: 'La talla debe ser un texto válido' })
   size: string;
 }

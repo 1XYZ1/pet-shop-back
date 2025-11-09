@@ -16,14 +16,14 @@ export class CreateAppointmentDto {
     description: 'Appointment date and time in ISO 8601 format',
     example: '2025-11-05T10:00:00.000Z',
   })
-  @IsDateString()
+  @IsDateString({}, { message: 'La fecha debe estar en formato ISO 8601 válido' })
   date: string;
 
   @ApiProperty({
     description: 'Pet ID (UUID) - La mascota debe pertenecer al usuario autenticado',
     example: '09248618-8139-49c5-a97a-06a91f3fc5fe',
   })
-  @IsUUID()
+  @IsUUID('4', { message: 'El ID de mascota debe ser un UUID válido' })
   petId: string;
 
   @ApiProperty({
@@ -31,7 +31,7 @@ export class CreateAppointmentDto {
     example: 'Primera vez que viene, es un poco nervioso',
     required: false,
   })
-  @IsString()
+  @IsString({ message: 'Las notas deben ser un texto válido' })
   @IsOptional()
   notes?: string;
 
@@ -39,6 +39,6 @@ export class CreateAppointmentDto {
     description: 'Service ID (UUID)',
     example: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
   })
-  @IsUUID()
+  @IsUUID('4', { message: 'El ID de servicio debe ser un UUID válido' })
   serviceId: string;
 }

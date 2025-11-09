@@ -70,9 +70,6 @@ export const PASSWORD_MAX_LENGTH = 50;
  * Mensaje mostrado al usuario cuando la contraseña no cumple con los
  * requisitos del PASSWORD_REGEX. Este mensaje debe ser claro y explicativo
  * para guiar al usuario en la creación de una contraseña válida.
- *
- * Nota: El mensaje está en inglés para mantener consistencia con el resto
- * de mensajes de validación del sistema.
  */
 export const PASSWORD_VALIDATION_MESSAGE =
-  'The password must have a Uppercase, lowercase letter and a number';
+  'La contraseña debe contener al menos una mayúscula, una minúscula y un número o carácter especial';

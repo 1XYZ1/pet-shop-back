@@ -23,16 +23,16 @@ export class CreateProductDto {
     minLength: 1,
     example: 'Alimento Premium para Perros Adultos',
   })
-  @IsString()
-  @MinLength(1)
+  @IsString({ message: 'El título debe ser un texto válido' })
+  @MinLength(1, { message: 'El título no puede estar vacío' })
   title: string;
 
   @ApiProperty({
     description: 'Product price',
     example: 45.99,
   })
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({}, { message: 'El precio debe ser un número válido' })
+  @IsPositive({ message: 'El precio debe ser mayor a cero' })
   @IsOptional()
   price?: number;
 
@@ -56,8 +56,8 @@ export class CreateProductDto {
     description: 'Product stock quantity',
     example: 50,
   })
-  @IsInt()
-  @IsPositive()
+  @IsInt({ message: 'El stock debe ser un número entero' })
+  @IsPositive({ message: 'El stock debe ser mayor a cero' })
   @IsOptional()
   stock?: number;
 
@@ -65,8 +65,8 @@ export class CreateProductDto {
     description: 'Product sizes',
     example: ['3kg', '7kg', '15kg'],
   })
-  @IsString({ each: true })
-  @IsArray()
+  @IsString({ each: true, message: 'Cada talla debe ser un texto válido' })
+  @IsArray({ message: 'Las tallas deben ser un arreglo' })
   sizes: string[]
 
   @ApiProperty({
@@ -74,7 +74,7 @@ export class CreateProductDto {
     enum: ProductType,
     example: ProductType.ALIMENTO_SECO,
   })
-  @IsEnum(ProductType)
+  @IsEnum(ProductType, { message: 'El tipo de producto no es válido' })
   type: ProductType;
 
   @ApiProperty({
