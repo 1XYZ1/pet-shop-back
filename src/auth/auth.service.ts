@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,6 +12,8 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
+
+  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     @InjectRepository(User)
@@ -89,11 +91,12 @@ export class AuthService {
 
   private handleDBErrors( error: any ): never {
 
+    // Prevenir enumeración de usuarios: no revelar si el email ya existe
+    if ( error.code === '23505' )
+      throw new BadRequestException('No se pudo crear la cuenta. Por favor, intenta con otros datos.');
 
-    if ( error.code === '23505' ) 
-      throw new BadRequestException( error.detail );
-
-    console.log(error)
+    // Logging seguro: NO loggear el objeto completo que podría contener contraseñas u otros datos sensibles
+    this.logger.error(`Database error during user creation: ${error.message}`);
 
     throw new InternalServerErrorException('Please check server logs');
 
