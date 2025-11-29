@@ -51,9 +51,11 @@ export class AppointmentsService {
     const { serviceId, petId, date, ...appointmentData } = createAppointmentDto;
 
     // Validar que la fecha sea futura
+    // Los admins pueden crear citas en el pasado (para seed/migración de datos)
     const appointmentDate = new Date(date);
     const now = new Date();
-    if (appointmentDate <= now) {
+
+    if (!customer.roles.includes('admin') && appointmentDate <= now) {
       throw new BadRequestException('La fecha de la cita debe ser futura');
     }
 
@@ -249,7 +251,9 @@ export class AppointmentsService {
       if (date) {
         const appointmentDate = new Date(date);
         const now = new Date();
-        if (appointmentDate <= now) {
+
+        // Los admins pueden actualizar a fechas pasadas (para correcciones/migraciones)
+        if (!user.roles.includes('admin') && appointmentDate <= now) {
           throw new BadRequestException('La fecha de la cita debe ser futura');
         }
         appointment.date = appointmentDate;
