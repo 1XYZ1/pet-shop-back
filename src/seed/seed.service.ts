@@ -277,7 +277,7 @@ export class SeedService {
         serviceId: service.id,
       };
 
-      // Crea la cita
+      // Crea la cita - usar customer para asociar correctamente, pero verificar roles
       const appointment = await this.appointmentsService.create(appointmentDto, customer);
 
       // Si la cita tiene un estado diferente de PENDING, actualizarlo

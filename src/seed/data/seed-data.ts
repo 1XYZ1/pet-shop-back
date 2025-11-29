@@ -647,7 +647,7 @@ export const initialData: SeedData = {
       notes: 'Chequeo general de Coco, todo salió bien',
       petIndex: 5, // Coco - Cacatúa
       serviceIndex: 3, // Consulta Veterinaria General
-      customerIndex: 5, // owner de Coco
+      customerIndex: 0, // usar admin para permitir fecha pasada en seed
     },
     {
       date: generateFutureDate(10, 15, 0), // 10 días en el futuro a las 15:00

@@ -59,18 +59,22 @@ export class AppointmentsService {
       throw new BadRequestException('La fecha de la cita debe ser futura');
     }
 
-    // Validar que la mascota existe y pertenece al usuario autenticado
+    // Validar que la mascota existe
+    // Los admins pueden crear citas para cualquier mascota (seed/gestión)
+    // Los usuarios regulares solo para sus propias mascotas
+    const isAdmin = customer.roles.includes('admin');
+
     const pet = await this.petRepository.findOne({
-      where: {
-        id: petId,
-        owner: { id: customer.id },
-        isActive: true
-      },
+      where: isAdmin
+        ? { id: petId, isActive: true }
+        : { id: petId, owner: { id: customer.id }, isActive: true },
     });
 
     if (!pet) {
       throw new NotFoundException(
-        'Mascota no encontrada o no pertenece al usuario autenticado'
+        isAdmin
+          ? 'Mascota no encontrada'
+          : 'Mascota no encontrada o no pertenece al usuario autenticado'
       );
     }
 
